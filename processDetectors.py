@@ -1,0 +1,111 @@
+from src.calibration import *
+from src.GammaLineCounting import *
+
+def main():
+
+    # Get Relevant paths
+    #-----------------------------------------------------
+    CodePath=os.path.dirname(os.path.realpath(__file__))
+    sim_folder_Ba133 = "/lfs/l1/legend/users/aalexander/legend-g4simple-simulation/simulations/" #Abis sims
+    sim_folder_Am241_HS1 = "" #TO DO
+    sim_folder_Am241_HS6 = "" #TO DO
+    #====================================================
+    # EDIT PROCESSING CONFIG BELOW
+    #====================================================
+    order_list = [2] #List of orders to process
+    energy_filter="cuspEmax_ctc"
+    cuts=True
+    source = "Ba133" #"Ba133", "Am241_HS1" or "Am241_HS6"
+    #-----------------------------------------------------
+    Calibrate_Data = False  #Pre-reqs: needs dsp pygama data
+    Gamma_line_count_data = False #Pre-reqs: needs calibration
+    Gamma_line_count_MC = True #Pre-reqs: needs AV post processed MC for range of FCCDs
+    Calculate_FCCD = False #Pre-reqs: needs gammaline counts for data and MC
+    Gamma_line_count_MC_bestfitFCCD = False #Pre-reqs: needs AV postprocessed MC for best fit FCCD
+    PlotSpectra = False #Pre-reqs: needs all above stages
+    #====================================================
+
+    if source == "Ba133":
+        source_data = "ba_HS4" #convert source name into correct nomenclature
+        sim_folder = sim_folder_Ba133
+    elif source == "Am241_HS1":
+        source_data = "am_HS1"
+        sim_folder = sim_folder_Am241_HS1
+    elif source == "Am241_HS6":
+        source_data = "am_HS6"
+        sim_folder = sim_folder_Am241_HS6
+
+    #Get detector list
+    detector_list = CodePath+"/detector_list.json"
+    with open(detector_list) as json_file:
+        detector_list_data = json.load(json_file)
+
+    #Iterate through detectors in each order
+    for order in order_list:
+        detectors = detector_list_data["order_"+str(order)]["detectors"]
+        detector_type = detector_list_data["order_"+str(order)]["detector_type"]
+        runs = detector_list_data["order_"+str(order)]["runs"][source]
+        MC_source_positions = detector_list_data["order_"+str(order)]["MC_source_positions"][source]
+
+        for ind, detector in enumerate(detectors):
+
+            if detector != "V02160A":
+                continue
+
+            run = runs[ind]
+            MC_source_position = MC_source_positions[ind] #=["top","0r","78z"]
+            MC_source_pos_underscore = MC_source_position[0]+"_"+ MC_source_position[1]+"_"+MC_source_position[2] #="top_0r_78z"
+            MC_source_pos_hyphon = MC_source_position[0]+"-"+ MC_source_position[1]+"-"+MC_source_position[2] #="top-0r-78z"
+
+            #========Calibration - DATA==========
+            if Calibrate_Data == True:
+
+                detector_name = "I"+detector[1:] if order == 2 else detector 
+                data_path_ICPC = "/lfs/l1/legend/legend-prodenv/prod-usr/ggmarsh-test-v03/gen/"+detector_name+"/tier2/"+source_data+"_top_dlt/"
+                data_path_BEGe = "/lfs/l1/legend/legend-prodenv/prod-usr/ggmarsh-full_dl-v01/gen/"+detector+"/tier2/"+source_data+"_top_dlt/" #gerda BEGe batch 1 and 2, order 0 and 1
+                data_path = data_path_ICPC if detector_type == "ICPC" else data_path_BEGe
+                
+                perform_calibration(detector, data_path, energy_filter, cuts, run, source)
+
+            # #========Gamma line count - DATA==========
+            if Gamma_line_count_data == True:
+                spectra_type = "data"
+
+                detector_name = "I"+detector[1:] if order == 2 else detector 
+                data_path_ICPC = "/lfs/l1/legend/legend-prodenv/prod-usr/ggmarsh-test-v03/gen/"+detector_name+"/tier2/"+source_data+"_top_dlt/"
+                data_path_BEGe = "/lfs/l1/legend/legend-prodenv/prod-usr/ggmarsh-full_dl-v01/gen/"+detector+"/tier2/"+source_data+"_top_dlt/" #gerda BEGe batch 1 and 2, order 0 and 1
+                data_path = data_path_ICPC if detector_type == "ICPC" else data_path_BEGe
+
+                if cuts == False:
+                    calibration = CodePath+"/results/data_calibration/"+detector+"/"+source+"/calibration_run"+str(run)+"_nocuts.json"
+                else:
+                    calibration = CodePath+"/results/data_calibration/"+detector+"/"+source+"/calibration_run"+str(run)+"_cuts.json"
+
+                perform_gammaLineCounting(detector, source, spectra_type, data_path=data_path, calibration=calibration, energy_filter=energy_filter, cuts=cut, run=run)
+
+
+            # #========Gamma line count - MC==========
+            if Gamma_line_count_MC == True:
+                spectra_type = "MC"
+                #normal paramaters:
+                DLF_list=[1.0]
+                smear="g"
+                frac_FCCDbore=0.5
+                TL_model="notl"
+                # FCCD_list=[0.0] #ICPCs
+                FCCD_list=[0.0,0.25, 0.5, 0.75, 1.0, 1.25, 1.5, 3.0] #ICPCs
+                # FCCD_list=[0.0,0.25, 0.5, 0.75, 1.0, 1.25, 1.5,1.75,2.0, 3.0] #BEGes
+
+                for FCCD in FCCD_list:
+                    for DLF in DLF_list:
+                        print("FCCD:", FCCD, ", DLF: ", DLF)
+                        MC_id=detector+"-"+source_data+"-"+MC_source_pos_hyphon+"_"+smear+"_"+TL_model+"_FCCD"+str(FCCD)+"mm_DLF"+str(DLF)+"_fracFCCDbore"+str(frac_FCCDbore)
+                        sim_path=sim_folder+detector+"/"+source_data+"/"+MC_source_pos_underscore+"/hdf5/AV_processed/"+MC_id+".hdf5"
+                        perform_gammaLineCounting(detector, source, spectra_type,sim_path=sim_path, MC_id=MC_id)
+                        print("")
+
+
+
+
+if __name__ == "__main__":
+    main()

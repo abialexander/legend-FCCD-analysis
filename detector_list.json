@@ -1,0 +1,131 @@
+{
+    "order_GERDA_0":{
+        "detector_type": "BEGe",
+        "lab": "HADES",
+        "detectors": ["B00000B", "B00032B", "B00091B"], 
+        "runs":{"Ba133":[], "Am241_HS1": []},
+        "MC_source_positions": {"Ba133":[], "Am241_HS1": []}
+    },
+
+    "order_GERDA_1":{
+        "detector_type": "BEGe",
+        "lab": "HADES",
+        "detectors": ["B00000D", "B00035A", "B00035B", "B00002C", "B00061C", "B00076C"], 
+        "runs":{"Ba133":[], "Am241_HS1": []},
+        "MC_source_positions": {"Ba133":[], "Am241_HS1": []} 
+    },
+
+    "order_0": {
+        "detector_type": "ICPC",
+        "lab": "",
+        "detectors": ["V00048B"], 
+        "runs":{"Ba133":[], "Am241_HS1": []},
+        "MC_source_positions": {"Ba133":[], "Am241_HS1": []}
+    },
+
+    "order_1": {
+        "detector_type": "ICPC",
+        "lab": "SURF/ORNL",
+        "detectors": [], 
+        "runs":{"Ba133":[], "Am241_HS1": []},
+        "MC_source_positions": {"Ba133":[], "Am241_HS1": []}
+    },
+    
+
+    "order_2": { 
+        "detector_type": "ICPC",
+        "lab": "HADES",
+        "detectors": ["V02160A", "V02160B", "V02162B", "V02166B"],
+        "runs":{
+            "Ba133":[1,1,1,1], 
+            "Am241_HS1": [3,1,2,2]},
+        "MC_source_positions": {
+            "Ba133":[["top","0r","78z"], ["top","0r","78z"],["top","0r","78z"],["top","0r","78z"]], 
+            "Am241_HS1": ["top-68r-4z", "top-46r-15z", "top-50r-3z", "top-35r-7z"]}
+    },
+
+    "order_3": { 
+        "detector_type": "ICPC",
+        "lab": "",
+        "detectors": [],
+        "runs":{
+            "Ba133":[], 
+            "Am241_HS1": []},
+        "MC_source_positions": {
+            "Ba133":[], 
+            "Am241_HS1": []}
+    },
+
+
+    "order_4":{
+        "detector_type": "ICPC",
+        "lab": "HADES",
+        "detectors": ["V04199A", "V04545A", "V04549A","V04549B"],
+        "runs":{
+            "Ba133":[], 
+            "Am241_HS1": []},
+        "MC_source_positions": {
+            "Ba133":[], 
+            "Am241_HS1": []}
+    },
+
+    "order_5":{
+        "detector_type": "ICPC",
+        "lab": "HADES",
+        "detectors": ["V05261A","V05261B", "V05266A", "V05266B", "V05267A", "V05267B", "V05268A", "V05268B", "V05612A", "V05612B"] ,
+        "runs":{
+            "Ba133":[], 
+            "Am241_HS1": []},
+        "MC_source_positions": {
+            "Ba133":[], 
+            "Am241_HS1": []}
+    },
+
+    "order_6":{
+        "detector_type": "ICPC",
+        "lab": "ORNL/HADES",
+        "detectors": [] ,
+        "runs":{
+            "Ba133":[], 
+            "Am241_HS1": []},
+        "MC_source_positions": {
+            "Ba133":[], 
+            "Am241_HS1": []}
+    },
+
+    "order_7":{
+        "detector_type": "ICPC",
+        "lab": "HADES",
+        "detectors": ["V07298B","V07302A","V07302B","V07647A", "V07647B"] ,
+        "runs":{
+            "Ba133":[], 
+            "Am241_HS1": []},
+        "MC_source_positions": {
+            "Ba133":[], 
+            "Am241_HS1": []}
+    },
+
+    "order_8":{
+        "detector_type": "ICPC",
+        "lab": "HADES",
+        "detectors": ["V08682A", "V08682B"],
+        "runs":{
+            "Ba133":[], 
+            "Am241_HS1": []},
+        "MC_source_positions": {
+            "Ba133":[], 
+            "Am241_HS1": []}
+    },
+
+    "order_9":{
+        "detector_type": "ICPC",
+        "lab": "HADES",
+        "detectors":  ["V09374A", "V09724A", "V09372A"],
+        "runs":{
+            "Ba133":[], 
+            "Am241_HS1": []},
+        "MC_source_positions": {
+            "Ba133":[], 
+            "Am241_HS1": []}
+    }
+}
