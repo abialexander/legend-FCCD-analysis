@@ -2,6 +2,6 @@
 
 !results/
 results/*
-!results/data_calibration/
-results/data_calibration/*
-!results/data_calibration/V02160A/
+!results/*/
+results/*/*
+!results/*/V02160A/
