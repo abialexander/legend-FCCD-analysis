@@ -3,12 +3,16 @@ from src.GammaLineCounting import *
 
 def main():
 
+    #-----------------------------------------------------
     # Get Relevant paths
     #-----------------------------------------------------
     CodePath=os.path.dirname(os.path.realpath(__file__))
     sim_folder_Ba133 = "/lfs/l1/legend/users/aalexander/legend-g4simple-simulation/simulations/" #Abis sims
-    sim_folder_Am241_HS1 = "" #TO DO
+    sim_folder_Am241_HS1 = "/lfs/l1/legend/detector_char/enr/hades/simulations/legend-g4simple-simulation/simulations/" #Vale sims
     sim_folder_Am241_HS6 = "" #TO DO
+    data_folder_ICPC = "/lfs/l1/legend/legend-prodenv/prod-usr/ggmarsh-test-v03/gen/"
+    data_folder_BEGe = "/lfs/l1/legend/legend-prodenv/prod-usr/ggmarsh-full_dl-v01/gen/" #gerda BEGe batch 1 and 2, order 0 and 1
+   
     #====================================================
     # EDIT PROCESSING CONFIG BELOW
     #====================================================
@@ -60,22 +64,16 @@ def main():
             #========Calibration - DATA==========
             if Calibrate_Data == True:
 
-                detector_name = "I"+detector[1:] if order == 2 else detector 
-                data_path_ICPC = "/lfs/l1/legend/legend-prodenv/prod-usr/ggmarsh-test-v03/gen/"+detector_name+"/tier2/"+source_data+"_top_dlt/"
-                data_path_BEGe = "/lfs/l1/legend/legend-prodenv/prod-usr/ggmarsh-full_dl-v01/gen/"+detector+"/tier2/"+source_data+"_top_dlt/" #gerda BEGe batch 1 and 2, order 0 and 1
-                data_path = data_path_ICPC if detector_type == "ICPC" else data_path_BEGe
-                
+                detector_name = "I"+detector[1:] if order == 2 else detector  
+                data_path = data_folder_ICPC+detector_name+"/tier2/"+source_data+"_top_dlt/" if detector_type == "ICPC" else data_folder_BEGe+detector_name+"/tier2/"+source_data+"_top_dlt/"
                 perform_calibration(detector, data_path, energy_filter, cuts, run, source)
 
-            # #========Gamma line count - DATA==========
+            #========Gamma line count - DATA==========
             if Gamma_line_count_data == True:
                 spectra_type = "data"
 
                 detector_name = "I"+detector[1:] if order == 2 else detector 
-                data_path_ICPC = "/lfs/l1/legend/legend-prodenv/prod-usr/ggmarsh-test-v03/gen/"+detector_name+"/tier2/"+source_data+"_top_dlt/"
-                data_path_BEGe = "/lfs/l1/legend/legend-prodenv/prod-usr/ggmarsh-full_dl-v01/gen/"+detector+"/tier2/"+source_data+"_top_dlt/" #gerda BEGe batch 1 and 2, order 0 and 1
-                data_path = data_path_ICPC if detector_type == "ICPC" else data_path_BEGe
-
+                data_path = data_folder_ICPC+detector_name+"/tier2/"+source_data+"_top_dlt/" if detector_type == "ICPC" else data_folder_BEGe+detector_name+"/tier2/"+source_data+"_top_dlt/"
                 if cuts == False:
                     calibration = CodePath+"/results/data_calibration/"+detector+"/"+source+"/calibration_run"+str(run)+"_nocuts.json"
                 else:
@@ -83,8 +81,7 @@ def main():
 
                 perform_gammaLineCounting(detector, source, spectra_type, data_path=data_path, calibration=calibration, energy_filter=energy_filter, cuts=cut, run=run)
 
-
-            # #========Gamma line count - MC==========
+            #========Gamma line count - MC==========
             if Gamma_line_count_MC == True:
                 spectra_type = "MC"
                 #normal paramaters:
@@ -93,9 +90,11 @@ def main():
                 frac_FCCDbore=0.5
                 TL_model="notl"
                 # FCCD_list=[0.0] #ICPCs
-                FCCD_list=[0.0,0.25, 0.5, 0.75, 1.0, 1.25, 1.5, 3.0] #ICPCs
-                # FCCD_list=[0.0,0.25, 0.5, 0.75, 1.0, 1.25, 1.5,1.75,2.0, 3.0] #BEGes
-
+                if source == "Ba133":
+                    FCCD_list=[0.0,0.25, 0.5, 0.75, 1.0, 1.25, 1.5, 3.0] #ICPCs
+                    # FCCD_list=[0.0,0.25, 0.5, 0.75, 1.0, 1.25, 1.5,1.75,2.0, 3.0] #BEGes
+                elif source == "Am241_HS1":
+                    FCCD_list=[0.0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1.0, 1.1, 1.2, 1.3, 1.4, 1.5, 1.6, 1.7, 1.8, 1.9, 2.0]
                 for FCCD in FCCD_list:
                     for DLF in DLF_list:
                         print("FCCD:", FCCD, ", DLF: ", DLF)

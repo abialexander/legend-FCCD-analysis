@@ -38,7 +38,7 @@ def read_all_dsp_lh5(t2_folder, cuts, cut_file_path=None, run="all", sigma=4):
     else: #apply cuts
         files = [t2_folder+file for file in files] #get list of full paths
         lh5_group = "raw"
-        df_total_cuts, failed_cuts = cut.load_df_with_cuts(files, lh5_group, cut_file = cut_file_path, cut_parameters= {'bl_mean':sigma,'bl_std':sigma}, verbose=True)
+        df_total_cuts, failed_cuts = cut.load_df_with_cuts(files, lh5_group, cut_file = cut_file_path, cut_parameters= {'bl_mean':sigma,'bl_std':sigma}) #, verbose=True)
 
         return df_total_cuts, failed_cuts
 
@@ -52,7 +52,6 @@ def load_energy_data(data_path, energy_filter, cuts, run, plot_hist = False, sig
         print("sigma cuts: ", str(sigma_cuts))
         df_total_lh5, failed_cuts = read_all_dsp_lh5(data_path,cuts,run=run, sigma=sigma_cuts)
         failed_cuts = failed_cuts[energy_filter]
-    print("df_total_lh5: ", df_total_lh5)
     energy_filter_data = df_total_lh5[energy_filter]
 
     if plot_hist == True:

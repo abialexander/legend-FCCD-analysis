@@ -1,2 +1,4 @@
+src/__pycache__/
+
 results/
-src/__pychache__/
+!results/*/V02160A/ #Example detector
