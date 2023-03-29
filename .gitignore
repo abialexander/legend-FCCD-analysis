@@ -1,4 +1,4 @@
 src/__pycache__/
 
 results/*
-!results/data_calibration/V02160A/ #Example detector
+!results/data_calibration/V02160A/* #Example detector
