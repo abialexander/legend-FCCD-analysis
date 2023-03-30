@@ -1,5 +1,6 @@
 from src.calibration import *
 from src.GammaLineCounting import *
+from src.FCCD import *
 
 def main():
 
@@ -23,8 +24,8 @@ def main():
     #-----------------------------------------------------
     Calibrate_Data = False  #Pre-reqs: needs dsp pygama data
     Gamma_line_count_data = False #Pre-reqs: needs calibration
-    Gamma_line_count_MC = True #Pre-reqs: needs AV post processed MC for range of FCCDs
-    Calculate_FCCD = False #Pre-reqs: needs gammaline counts for data and MC
+    Gamma_line_count_MC = False #Pre-reqs: needs AV post processed MC for range of FCCDs
+    Calculate_FCCD = True #Pre-reqs: needs gammaline counts for data and MC
     Gamma_line_count_MC_bestfitFCCD = False #Pre-reqs: needs AV postprocessed MC for best fit FCCD
     PlotSpectra = False #Pre-reqs: needs all above stages
     #====================================================
@@ -102,8 +103,15 @@ def main():
                         sim_path=sim_folder+detector+"/"+source_data+"/"+MC_source_pos_underscore+"/hdf5/AV_processed/"+MC_id+".hdf5"
                         perform_gammaLineCounting(detector, source, spectra_type,sim_path=sim_path, MC_id=MC_id)
                         print("")
+            
+            #========Calculate FCCD==========
+            if Calculate_FCCD == True:
 
-
+                MC_id=detector+"-"+source_data+"-"+MC_source_pos_hyphon
+                smear="g"
+                TL_model="notl"
+                frac_FCCDbore=0.5
+                calculateFCCD(detector, source, MC_id, smear, TL_model, frac_FCCDbore, energy_filter, cuts, run)
 
 
 if __name__ == "__main__":
