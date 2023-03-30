@@ -208,7 +208,7 @@ def perform_calibration(detector, source, data_path, energy_filter, cuts, run):
         ax1.plot(fwhm_peaks,fit_vals,lw=1, c='g')
         ax1.set_ylabel("FWHM (keV)", ha='right', y=1)
 
-        ax2.plot(fitted_peaks,pgp.poly(mus, pars)-fitted_peaks, lw=1, c='b')
+        ax2.plot(fitted_peaks,pgp.poly(mus, pars)-fitted_peaks, marker='o', lw=1, c='b')
         ax2.set_xlabel("Energy (keV)",    ha='right', x=1)
         ax2.set_ylabel("Residuals (keV)", ha='right', y=1)
 

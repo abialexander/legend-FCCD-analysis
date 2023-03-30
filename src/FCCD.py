@@ -162,7 +162,7 @@ def calculateFCCD(detector, source, MC_id, smear, TL_model, frac_FCCDbore, energ
     countRatio_data_err = PeakCounts["countRatio_err"] #stat error on data
 
     #========= PLOTTING ===========
-    plot_colors = {"MC":"black", "MC_fit": "black", "data": "red", "data_err_stat": "green", "MC_err_stat": "green", "MC_err_syst": "pink", "MC_err_total": "orange", "FCCD": "red", "FCCD_err_total": "blue", "FCCD_err_MCstatsyst": "red", "FCCD_err_MCstat": "purple", "FCCD_err_MCsyst": "pink", "FCCD_err_datastat": "green", "FCCD_err_statMCstatdata": "grey"}
+    plot_colors = {"MC":"black", "MC_fit": "black", "data": "red", "data_err_stat": "orange", "MC_err_stat": "green", "MC_err_syst": "pink", "MC_err_total": "green", "FCCD": "red", "FCCD_err_total": "blue", "FCCD_err_MCstatsyst": "red", "FCCD_err_MCstat": "purple", "FCCD_err_MCsyst": "pink", "FCCD_err_datastat": "green", "FCCD_err_statMCstatdata": "grey"}
     linewidth_err = 0.75
     linewidth_main = 1.0
     

@@ -19,16 +19,16 @@ def main():
     # EDIT PROCESSING CONFIG BELOW
     #====================================================
     order_list = [4] #List of orders to process
+    source = "Ba133" #"Ba133", "Am241_HS1" or "Am241_HS6"
     energy_filter="cuspEmax_ctc"
     cuts=True
-    source = "Ba133" #"Ba133", "Am241_HS1" or "Am241_HS6"
     #-----------------------------------------------------
-    Calibrate_Data = True  #Pre-reqs: needs dsp pygama data
-    Gamma_line_count_data = True #Pre-reqs: needs calibration
-    Gamma_line_count_MC = True #Pre-reqs: needs AV post processed MC for range of FCCDs
-    Calculate_FCCD = True #Pre-reqs: needs gammaline counts for data and MC
-    Gamma_line_count_MC_bestfitFCCD = False #Pre-reqs: needs AV postprocessed MC for best fit FCCD
-    PlotSpectra = False #Pre-reqs: needs all above stages
+    Calibrate_Data = False  #Pre-reqs: needs dsp pygama data
+    Gamma_line_count_data = False #Pre-reqs: needs calibration
+    Gamma_line_count_MC = False #Pre-reqs: needs AV post processed MC for range of FCCDs
+    Calculate_FCCD = False #Pre-reqs: needs gammaline counts for data and MC
+    Gamma_line_count_MC_bestfitFCCD = True #Pre-reqs: needs AV postprocessed MC for best fit FCCD
+    PlotSpectra = True #Pre-reqs: needs all above stages
     #====================================================
 
     if source == "Ba133":
@@ -55,7 +55,7 @@ def main():
 
         for ind, detector in enumerate(detectors):
 
-            # if detector != "V02166B":
+            # if detector == "V04199A" or detector == "V04545A" or detector == "V04549A":
             #     continue
             print("")
             print("detector: ", detector)

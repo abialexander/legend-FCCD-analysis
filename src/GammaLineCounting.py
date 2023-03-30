@@ -159,8 +159,10 @@ def perform_gammaLineCounting(detector, source, spectra_type, data_path=None, ca
     
     global R_doublePeak
     if source == "Ba133":
-        # peak_ranges = [[77,84],[352, 359.5],[158,163],[221,225.5],[274,279],[300,306],[381,386.5]] #Rough by eye
-        peak_ranges = [[77,84],[352.5, 359],[158,163],[221,225.5],[274,279],[300,306],[381,386.5]] #Rough by eye
+        if spectra_type == "MC":
+            peak_ranges = [[77,84],[352, 359.5],[158,163],[221,225.5],[274,279],[300,306],[381,386.5]] #Rough by eye
+        else:
+            peak_ranges = [[77,84],[352.5, 359],[158,163],[221,225.5],[274,279],[300,306],[381,386.5]] #Rough by eye
         peaks = [81, 356, 161, 223, 276, 303, 383]
         R_doublePeak = 2.65/32.9 #intensity ratio for Ba-133 double peak
     if source == "Am241_HS1" or source == "Am241_HS6":
