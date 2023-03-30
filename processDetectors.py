@@ -25,8 +25,8 @@ def main():
     Calibrate_Data = False  #Pre-reqs: needs dsp pygama data
     Gamma_line_count_data = False #Pre-reqs: needs calibration
     Gamma_line_count_MC = False #Pre-reqs: needs AV post processed MC for range of FCCDs
-    Calculate_FCCD = True #Pre-reqs: needs gammaline counts for data and MC
-    Gamma_line_count_MC_bestfitFCCD = False #Pre-reqs: needs AV postprocessed MC for best fit FCCD
+    Calculate_FCCD = False #Pre-reqs: needs gammaline counts for data and MC
+    Gamma_line_count_MC_bestfitFCCD = True #Pre-reqs: needs AV postprocessed MC for best fit FCCD
     PlotSpectra = False #Pre-reqs: needs all above stages
     #====================================================
 
@@ -54,8 +54,10 @@ def main():
 
         for ind, detector in enumerate(detectors):
 
-            if detector != "V02160A":
-                continue
+            # if detector != "V02160A":
+            #     continue
+            print("")
+            print("detector: ", detector)
 
             run = runs[ind]
             MC_source_position = MC_source_positions[ind] #=["top","0r","78z"]
@@ -112,6 +114,30 @@ def main():
                 TL_model="notl"
                 frac_FCCDbore=0.5
                 calculateFCCD(detector, source, MC_id, smear, TL_model, frac_FCCDbore, energy_filter, cuts, run)
+
+
+            #========Gamma line count -best fit MC==========
+            if Gamma_line_count_MC_bestfitFCCD == True:
+                spectra_type = "MC"
+                #normal paramaters:
+                DLF=1.0
+                smear="g"
+                frac_FCCDbore=0.5
+                TL_model="notl"
+                #get best fit FCCD
+                if cuts == "False":
+                    with open(CodePath+"/results/FCCD/"+detector+"/"+source+"/FCCD_"+detector+"-"+source_data+"-"+MC_source_pos_hyphon+"_"+smear+"_"+TL_model+"_fracFCCDbore"+str(frac_FCCDbore)+"_"+energy_filter+"_run"+str(run)+"_nocuts.json") as json_file:
+                        FCCD_data = json.load(json_file)
+                else: #4sigma cuts default
+                    with open(CodePath+"/results/FCCD/"+detector+"/"+source+"/FCCD_"+detector+"-"+source_data+"-"+MC_source_pos_hyphon+"_"+smear+"_"+TL_model+"_fracFCCDbore"+str(frac_FCCDbore)+"_"+energy_filter+"_run"+str(run)+"_cuts.json") as json_file:
+                        FCCD_data = json.load(json_file)
+                FCCD = round(FCCD_data["FCCD"],2)
+                TL_model="l"
+                MC_id = detector+"-"+source_data+"-"+MC_source_pos_hyphon+"_"+smear+"_"+TL_model+"_FCCD"+str(FCCD)+"mm_DLF"+str(DLF)+"_fracFCCDbore"+str(frac_FCCDbore)
+                sim_path=sim_folder+detector+"/"+source_data+"/"+MC_source_pos_underscore+"/hdf5/AV_processed/"+MC_id+".hdf5"
+                perform_gammaLineCounting(detector, source, spectra_type,sim_path=sim_path, MC_id=MC_id)
+                print("")
+
 
 
 if __name__ == "__main__":

@@ -51,7 +51,7 @@ def invert_exponential(x,a,b,c):
     return (1/b)*np.log(a/(x-c))
 
 def iminuit_LS_fit(x,y,yerr,fit_func, guess, bounds=None,return_chi_sq=False):
-    "perform least squares iminuit fit"
+    "perform least squares iminuit fit, requires yerr"
     least_squares = LeastSquares(x, y, yerr, fit_func)
     m = Minuit(least_squares, *guess) 
     if bounds is not None:
@@ -67,14 +67,12 @@ def iminuit_LS_fit(x,y,yerr,fit_func, guess, bounds=None,return_chi_sq=False):
         return coeff, coeff_err, m, chi_sq, dof
 
 def scipy_LS_fit(x,y,fit_func,guess,bounds=None, yerr=None):
-    "perform least squares scipy fit"
+    "perform least squares scipy fit, does not require yerr"
     if bounds == None:
         coeff, coeff_cov = optimize.curve_fit(fit_func, x, y, p0=guess, maxfev = 10**7, method ="trf", sigma = yerr, absolute_sigma=False)
     else:
         coeff, coeff_cov = optimize.curve_fit(fit_func, x, y, p0=guess, maxfev = 10**7, method ="trf", sigma = yerr, absolute_sigma=False, bounds=bounds)
-  
     coeff_err = np.sqrt(coeff_cov.diagonal())
-
     return coeff, coeff_err
 
     
@@ -295,7 +293,7 @@ def calculateFCCD(detector, source, MC_id, smear, TL_model, frac_FCCDbore, energ
     else:
         plt.savefig(outputFolder+"FCCD_"+MC_id+"_"+smear+"_"+TL_model+"_fracFCCDbore"+str(frac_FCCDbore)+"_"+energy_filter+"_run"+str(run)+"_cuts.png")
 
-    plt.show()
+    # plt.show()
 
     # Save interpolated fccd for data to a json file
 
@@ -315,14 +313,14 @@ def calculateFCCD(detector, source, MC_id, smear, TL_model, frac_FCCDbore, energ
     }
 
     if cuts == False:
-        with open(outputFolder+"FCCD_"+MC_id+"_"+smear+"_"+TL_model+"_fracFCCDbore"+str(frac_FCCDbor)+"_"+energy_filter+"_run"+str(run)+"_nocuts.json", "w") as outfile:
+        with open(outputFolder+"../FCCD_"+MC_id+"_"+smear+"_"+TL_model+"_fracFCCDbore"+str(frac_FCCDbore)+"_"+energy_filter+"_run"+str(run)+"_nocuts.json", "w") as outfile:
             json.dump(FCCD_data_dict, outfile, indent=4)
     else:
         if cuts_sigma ==4: #change manually if interested
-            with open(outputFolder+"FCCD_"+MC_id+"_"+smear+"_"+TL_model+"_fracFCCDbore"+str(frac_FCCDbore)+"_"+energy_filter+"_run"+str(run)+"_cuts.json", "w") as outfile:
+            with open(outputFolder+"../FCCD_"+MC_id+"_"+smear+"_"+TL_model+"_fracFCCDbore"+str(frac_FCCDbore)+"_"+energy_filter+"_run"+str(run)+"_cuts.json", "w") as outfile:
                 json.dump(FCCD_data_dict, outfile, indent=4)
         else:
-            with open(outputFolder+"FCCD_"+MC_id+"_"+smear+"_"+TL_model+"_fracFCCDbore"+str(frac_FCCDbore)+"_"+energy_filter+"_run"+str(run)+"_cuts"+str(cuts_sigma)+"sigma.json", "w") as outfile:
+            with open(outputFolder+"../FCCD_"+MC_id+"_"+smear+"_"+TL_model+"_fracFCCDbore"+str(frac_FCCDbore)+"_"+energy_filter+"_run"+str(run)+"_cuts"+str(cuts_sigma)+"sigma.json", "w") as outfile:
                 json.dump(FCCD_data_dict, outfile, indent=4)
 
     print("done")
