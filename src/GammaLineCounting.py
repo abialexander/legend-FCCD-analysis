@@ -86,7 +86,21 @@ def triple_gauss_double_step_pdf(x, a, mu1, sigma1, bkg1, s1, mu2, sigma2, a3, m
     
 
 def perform_gammaLineCounting(detector, source, spectra_type, data_path=None, calibration=None, energy_filter=None, cuts=None, run=None, sim_path=None, MC_id=None):
-    "Perform the gammaline counting on relevant gammaline peaks in Ba or Am, data or MC spectra"
+    """
+    Perform the gammaline counting on relevant gammaline peaks in Ba or Am, data or MC spectra
+    main args: 
+        - detector
+        - source ("Ba133", "Am241_HS1")
+        - spectra_type ("data" or "MC")
+    data args:
+        - data_path
+        - energy_filter
+        - cuts (True/False)
+        - run (1,2,etc)
+    MC args:
+        - sim_path (path to AV processed sim, e.g. /lfs/l1/legend/users/aalexander/legend-g4simple-simulation/legend/simulations/${detector}/ba_HS4/top_0r_78z/hdf5/AV_processed/${MC_id}.hdf5
+        - MC_id ({detector}-ba_HS4-top-0r-78z_${smear}_${TL_model}_FCCD${FCCD}mm_DLF${DLF}_fracFCCDbore${frac_FCCDbore}
+    """
     
     dir = os.path.dirname(os.path.realpath(__file__))
 
@@ -145,7 +159,8 @@ def perform_gammaLineCounting(detector, source, spectra_type, data_path=None, ca
     
     global R_doublePeak
     if source == "Ba133":
-        peak_ranges = [[77,84],[352, 359.5],[158,163],[221,225.5],[274,279],[300,306],[381,386.5]] #Rough by eye
+        # peak_ranges = [[77,84],[352, 359.5],[158,163],[221,225.5],[274,279],[300,306],[381,386.5]] #Rough by eye
+        peak_ranges = [[77,84],[352.5, 359],[158,163],[221,225.5],[274,279],[300,306],[381,386.5]] #Rough by eye
         peaks = [81, 356, 161, 223, 276, 303, 383]
         R_doublePeak = 2.65/32.9 #intensity ratio for Ba-133 double peak
     if source == "Am241_HS1" or source == "Am241_HS6":
@@ -216,6 +231,7 @@ def perform_gammaLineCounting(detector, source, spectra_type, data_path=None, ca
         if (chi_sq/dof > 50 or m.valid == False)and source =="Ba133": #repeat fit with no bounds if bad
             print("refitting...")
             m = Minuit(least_squares, *fitting_func_guess)
+            # m.limits = bounds
             m.migrad(ncall=10**7, iterate=100) 
             m.hesse()
             # m.simplex()

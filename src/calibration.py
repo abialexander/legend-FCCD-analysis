@@ -73,15 +73,18 @@ def fwhm_slope(x, m0, m1, m2):
     return np.sqrt(m0 + m1*x +(m2*(x**2)))
 
 
-def perform_calibration(detector, data_path, energy_filter, cuts, run, source):
+def perform_calibration(detector, source, data_path, energy_filter, cuts, run):
 
-    print("")
-    print("detector: ", detector)
-    print("data path: ", data_path)
-    print("energy_filter: ", energy_filter)
-    print("applying cuts: ", cuts)
-    print("data run: ", run)
-    print("source: ", source) #= "Ba133", "Am241_HS1" or "Am241_HS6"
+    """
+    Perform energy calibration on data spectra
+    args: 
+        - detector
+        - source ("Ba133", "Am241_HS1")
+        - data_path
+        - energy_filter (cuspEmax_ctc)
+        - cuts (True/False)
+        - run (1,2,etc)
+    """
 
     #initialise directories for detectors to save
     CodePath=os.path.dirname(os.path.realpath(__file__)) #i.e. /lfs/l1/legend/user/aalexander/legend-FCCD-analysis/src
@@ -90,8 +93,6 @@ def perform_calibration(detector, data_path, energy_filter, cuts, run, source):
         os.makedirs(outputFolder+"plots/")
 
     #====Load data======
-    print(" ")
-    print("Loading data")
     energy_filter_data, failed_cuts = load_energy_data(data_path, energy_filter, cuts, run)
 
     #========Compute calibration coefficients===========
@@ -126,8 +127,6 @@ def perform_calibration(detector, data_path, energy_filter, cuts, run, source):
 
         funcs = [pgp.gauss_step,pgp.gauss_step,pgp.gauss_step,pgp.gauss_step,pgp.gauss_step,pgp.gauss_step,pgp.gauss_step,pgp.gauss_step,pgp.gauss_step]
 
-
-    print(guess)
 
     print("Find peaks and compute calibration curve...",end=' ')
 

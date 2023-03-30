@@ -77,6 +77,19 @@ def scipy_LS_fit(x,y,fit_func,guess,bounds=None, yerr=None):
 
     
 def calculateFCCD(detector, source, MC_id, smear, TL_model, frac_FCCDbore, energy_filter, cuts, run):
+    """
+    Calculate FCCD of data
+    args: 
+        - detector
+        - source ("Ba133", "Am241_HS1")
+        - MC_id ({detector}-ba_HS4-top-0r-78z_${smear}_${TL_model}_FCCD${FCCD}mm_DLF${DLF}_fracFCCDbore${frac_FCCDbore}
+        - smear (resolution smearing, e.g. gaussian: "g")
+        - TL_model ("notl")
+        - frac_FCCDbore (fractional thickness of FCCD around borehole, e.g. 0.5)
+        - energy_filter (cuspE_ctc)
+        - cuts (True/False)
+        - run (1,2,etc)
+    """
 
     #initialise directories for detectors to save 
     dir = os.path.dirname(os.path.realpath(__file__))

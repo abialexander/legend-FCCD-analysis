@@ -1,6 +1,7 @@
 from src.calibration import *
 from src.GammaLineCounting import *
 from src.FCCD import *
+from src.plotSpectra import *
 
 def main():
 
@@ -17,16 +18,16 @@ def main():
     #====================================================
     # EDIT PROCESSING CONFIG BELOW
     #====================================================
-    order_list = [2] #List of orders to process
+    order_list = [4] #List of orders to process
     energy_filter="cuspEmax_ctc"
     cuts=True
     source = "Ba133" #"Ba133", "Am241_HS1" or "Am241_HS6"
     #-----------------------------------------------------
-    Calibrate_Data = False  #Pre-reqs: needs dsp pygama data
-    Gamma_line_count_data = False #Pre-reqs: needs calibration
-    Gamma_line_count_MC = False #Pre-reqs: needs AV post processed MC for range of FCCDs
-    Calculate_FCCD = False #Pre-reqs: needs gammaline counts for data and MC
-    Gamma_line_count_MC_bestfitFCCD = True #Pre-reqs: needs AV postprocessed MC for best fit FCCD
+    Calibrate_Data = True  #Pre-reqs: needs dsp pygama data
+    Gamma_line_count_data = True #Pre-reqs: needs calibration
+    Gamma_line_count_MC = True #Pre-reqs: needs AV post processed MC for range of FCCDs
+    Calculate_FCCD = True #Pre-reqs: needs gammaline counts for data and MC
+    Gamma_line_count_MC_bestfitFCCD = False #Pre-reqs: needs AV postprocessed MC for best fit FCCD
     PlotSpectra = False #Pre-reqs: needs all above stages
     #====================================================
 
@@ -54,7 +55,7 @@ def main():
 
         for ind, detector in enumerate(detectors):
 
-            # if detector != "V02160A":
+            # if detector != "V02166B":
             #     continue
             print("")
             print("detector: ", detector)
@@ -69,7 +70,7 @@ def main():
 
                 detector_name = "I"+detector[1:] if order == 2 else detector  
                 data_path = data_folder_ICPC+detector_name+"/tier2/"+source_data+"_top_dlt/" if detector_type == "ICPC" else data_folder_BEGe+detector_name+"/tier2/"+source_data+"_top_dlt/"
-                perform_calibration(detector, data_path, energy_filter, cuts, run, source)
+                perform_calibration(detector, source, data_path, energy_filter, cuts, run)
 
             #========Gamma line count - DATA==========
             if Gamma_line_count_data == True:
@@ -115,7 +116,6 @@ def main():
                 frac_FCCDbore=0.5
                 calculateFCCD(detector, source, MC_id, smear, TL_model, frac_FCCDbore, energy_filter, cuts, run)
 
-
             #========Gamma line count -best fit MC==========
             if Gamma_line_count_MC_bestfitFCCD == True:
                 spectra_type = "MC"
@@ -125,7 +125,7 @@ def main():
                 frac_FCCDbore=0.5
                 TL_model="notl"
                 #get best fit FCCD
-                if cuts == "False":
+                if cuts == False:
                     with open(CodePath+"/results/FCCD/"+detector+"/"+source+"/FCCD_"+detector+"-"+source_data+"-"+MC_source_pos_hyphon+"_"+smear+"_"+TL_model+"_fracFCCDbore"+str(frac_FCCDbore)+"_"+energy_filter+"_run"+str(run)+"_nocuts.json") as json_file:
                         FCCD_data = json.load(json_file)
                 else: #4sigma cuts default
@@ -136,8 +136,35 @@ def main():
                 MC_id = detector+"-"+source_data+"-"+MC_source_pos_hyphon+"_"+smear+"_"+TL_model+"_FCCD"+str(FCCD)+"mm_DLF"+str(DLF)+"_fracFCCDbore"+str(frac_FCCDbore)
                 sim_path=sim_folder+detector+"/"+source_data+"/"+MC_source_pos_underscore+"/hdf5/AV_processed/"+MC_id+".hdf5"
                 perform_gammaLineCounting(detector, source, spectra_type,sim_path=sim_path, MC_id=MC_id)
-                print("")
+            
+            #========Plot Spectra==========
+            if PlotSpectra == True:
+                
+                #data args
+                detector_name = "I"+detector[1:] if order == 2 else detector 
+                data_path = data_folder_ICPC+detector_name+"/tier2/"+source_data+"_top_dlt/" if detector_type == "ICPC" else data_folder_BEGe+detector_name+"/tier2/"+source_data+"_top_dlt/"
+                if cuts == False:
+                    calibration = CodePath+"/results/data_calibration/"+detector+"/"+source+"/calibration_run"+str(run)+"_nocuts.json"
+                else:
+                    calibration = CodePath+"/results/data_calibration/"+detector+"/"+source+"/calibration_run"+str(run)+"_cuts.json"
 
+                #MC args
+                DLF=1.0
+                smear="g"
+                frac_FCCDbore=0.5
+                TL_model="notl"
+                if cuts == False:
+                    with open(CodePath+"/results/FCCD/"+detector+"/"+source+"/FCCD_"+detector+"-"+source_data+"-"+MC_source_pos_hyphon+"_"+smear+"_"+TL_model+"_fracFCCDbore"+str(frac_FCCDbore)+"_"+energy_filter+"_run"+str(run)+"_nocuts.json") as json_file:
+                        FCCD_data = json.load(json_file)
+                else: #4sigma cuts default
+                    with open(CodePath+"/results/FCCD/"+detector+"/"+source+"/FCCD_"+detector+"-"+source_data+"-"+MC_source_pos_hyphon+"_"+smear+"_"+TL_model+"_fracFCCDbore"+str(frac_FCCDbore)+"_"+energy_filter+"_run"+str(run)+"_cuts.json") as json_file:
+                        FCCD_data = json.load(json_file)
+                FCCD = round(FCCD_data["FCCD"],2)
+                TL_model="l"
+                MC_id = detector+"-"+source_data+"-"+MC_source_pos_hyphon+"_"+smear+"_"+TL_model+"_FCCD"+str(FCCD)+"mm_DLF"+str(DLF)+"_fracFCCDbore"+str(frac_FCCDbore)
+                sim_path=sim_folder+detector+"/"+source_data+"/"+MC_source_pos_underscore+"/hdf5/AV_processed/"+MC_id+".hdf5"
+
+                plotSpectra(detector, source, MC_id, sim_path, FCCD, DLF, data_path, calibration, energy_filter, cuts, run)
 
 
 if __name__ == "__main__":
