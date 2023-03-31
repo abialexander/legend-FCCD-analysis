@@ -176,6 +176,7 @@ def perform_calibration(detector, source, data_path, energy_filter, cuts, run):
     else:
         plt.savefig(outputFolder+"plots/calibrated_energy_"+energy_filter+"_run"+str(run)+"_nocuts.png")
 
+    plt.close("all")
     #=========Plot Calibration Curve===========
 
     if calib_pars == True:
