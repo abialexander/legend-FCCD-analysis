@@ -2,28 +2,40 @@ import os
 import json
 from matplotlib import gridspec
 from src.calibration import *
+from src.compareResults import lighten_color
 
-def computeDataMCratios(energy_bins, counts_data, counts_MC):
+def computeDataMCratios(energy_bins_centres, counts_data, counts_MC, scaling_MC=None, residuals = False):
     "compute the ratio of data/MC for 2 histograms (shared energy bins, counts_data and counts_MC)"
     Data_MC_ratios = []
     Data_MC_ratios_err = []
-    for index, bin in enumerate(energy_bins[1:]):
+
+    # for index, bin in enumerate(energy_bins[1:]):
+    for index, bin in enumerate(energy_bins_centres):
         data = counts_data[index]
         MC = counts_MC[index] #This counts has already been scaled by weights
+        if scaling_MC is not None:
+            MC_unscaled = MC/scaling_MC #convert back to unscaled MC
         if MC == 0:
-            ratio = 0.
-            error = 0.
+            ratio = np.nan
+            error = np.nan
         else:
-            try: 
-                ratio = data/MC
-                try: 
-                    error = np.sqrt(1/data + 1/MC)
+            try:
+                if residuals == True:
+                    ratio = (data-MC)/MC #return residuals instead of ratio
+                else: 
+                    ratio = data/MC
+                try:
+                    if scaling_MC is None: 
+                        error = (data/MC)*np.sqrt(1/data + 1/MC)
+                    else:
+                        error = np.sqrt((data/(MC_unscaled**2*scaling_MC**2)) + (data**2/(MC_unscaled**3*scaling_MC**2)))
                 except:
-                    error = 0.
+                    error = np.nan
             except:
-                ratio = 0 #if MC=0 and dividing by 0
+                ratio = np.nan #if MC=0 and dividing by 0
         Data_MC_ratios.append(ratio)
         Data_MC_ratios_err.append(error)
+
 
     return Data_MC_ratios, Data_MC_ratios_err
 
@@ -99,32 +111,41 @@ def plotSpectra(detector, source, MC_id, sim_path, FCCD, DLF, data_path, calibra
     #==========================================================
     #PLOT DATA + SCALED MC
     #==========================================================
-    binwidth = 0.1 #keV
+    binwidth = 0.25 #keV
     xlo = 0
     xhi = 450 if source == "Ba133" else 120
     bins = np.arange(xlo,xhi,binwidth)
+    bins_centres = (bins[:-1] + bins[1:])/2
     
     fig = plt.figure()
     gs = gridspec.GridSpec(2, 1, height_ratios=[2, 1]) 
     ax0 = plt.subplot(gs[0])
     ax1 = plt.subplot(gs[1], sharex = ax0)
 
-    counts_data, bins, bars_data = ax0.hist(energy_data, bins=bins,  label = "Data", histtype = 'step', linewidth = '0.35')
-    counts_MC, bins, bars = ax0.hist(energy_MC, bins = bins, weights=(C_scale_data/C_scale_MC)*np.ones_like(energy_MC), label = "MC: FCCD "+str(FCCD)+"mm, DLF: "+str(DLF)+" (scaled)", histtype = 'step', linewidth = '0.35')
+    linewidth = 0.35 if binwidth<0.2 else 0.5
+    counts_data, bins, bars_data = ax0.hist(energy_data, bins=bins,  label = "Data", histtype = 'step', linewidth = linewidth)
+    scaling_MC = C_scale_data/C_scale_MC #scaling of MC
+    counts_MC, bins, bars = ax0.hist(energy_MC, bins = bins, weights=(scaling_MC)*np.ones_like(energy_MC), label = "MC: FCCD "+str(FCCD)+"mm, DLF: "+str(DLF)+" (scaled)", histtype = 'step', linewidth = linewidth)
 
     #compute ratio of data/MC
-    Data_MC_ratios, Data_MC_ratios_err = computeDataMCratios(bins, counts_data, counts_MC)
-    ax1.errorbar(bins[1:], Data_MC_ratios, yerr=Data_MC_ratios_err, color="green", elinewidth = 1, fmt='x', ms = 1.0, mew = 1.0)
-    ax1.hlines(1, xlo, xhi, colors="gray", linestyles='dashed') 
+    Data_MC_ratios, Data_MC_ratios_err = computeDataMCratios(bins_centres, counts_data, counts_MC, scaling_MC=scaling_MC, residuals=True)
+    # ax1.errorbar(bins_centres, Data_MC_ratios, yerr=Data_MC_ratios_err, color="dimgrey", elinewidth = linewidth, fmt='o', ms = 1.0, mew = 1.0)
+    # ax1.hlines(0, xlo, xhi, colors="gray", linestyles='dashed', linewidth=linewidth) 
+    
+    # colors = ["lightblue", "lightyellow", "lightsalmon", "lightgreen"]
+    ax1.fill_between(bins_centres, -3*np.array(Data_MC_ratios_err), 3*np.array(Data_MC_ratios_err), label=r'3$\sigma$', color=lighten_color("lightsalmon",0.75))
+    ax1.fill_between(bins_centres, -2*np.array(Data_MC_ratios_err), 2*np.array(Data_MC_ratios_err), label=r'2$\sigma$', color=lighten_color("lightyellow", 0.75))
+    ax1.fill_between(bins_centres, -1*np.array(Data_MC_ratios_err), Data_MC_ratios_err, label=r'1$\sigma$', color=lighten_color("lightgreen", 0.75))
+    ax1.plot(bins_centres, Data_MC_ratios, marker="o",color="black", linestyle='None', ms=0.5)
+    ax1.set_ylabel(r'(Data-MC)/MC')
+    ax1.set_ylim(-5,5)
+    # ax1.legend()
     
     plt.xlabel("Energy [keV]")
-    ax0.set_ylabel("Counts")
+    ax0.set_ylabel("Counts / "+str(binwidth)+" keV")
     ax0.set_yscale("log")
     ax0.legend(loc = "lower left")
-    ax0.set_title(detector)
-    ax1.set_ylabel("data/MC")
-    ax1.set_yscale("log")
-    ax1.set_ylim(0.05,50)
+    ax0.set_title(detector+", "+source)
     ax1.set_xlim(xlo,xhi)
     ax0.set_xlim(xlo,xhi)
     
@@ -135,7 +156,7 @@ def plotSpectra(detector, source, MC_id, sim_path, FCCD, DLF, data_path, calibra
     else:
         plt.savefig(outputFolder+"DataMC_"+MC_id+"_"+energy_filter+"_run"+str(run)+"_cuts.png")
 
-    plt.show()
+    # plt.show()
     print("done")
 
 

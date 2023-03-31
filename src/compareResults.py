@@ -3,11 +3,20 @@ import os
 import matplotlib.pyplot as plt
 import matplotlib.colors as mc
 import numpy as np
+import colorsys
 
 class Vividict(dict):
     def __missing__(self, key):
         value = self[key] = type(self)()
         return value
+
+def lighten_color(color, amount = 0.5):
+    try:
+        c = mc.cnames[color]
+    except:
+       c = color
+    c = colorsys.rgb_to_hls( * mc.to_rgb(c))
+    return colorsys.hls_to_rgb(c[0], 1 - amount * (1 - c[1]), c[2])
 
 
 def collateFCCDs(order_list, source, energy_filter="cuspEmax_ctc", cuts=True, smear="g", frac_FCCDbore=0.5):
@@ -44,16 +53,27 @@ def collateFCCDs(order_list, source, energy_filter="cuspEmax_ctc", cuts=True, sm
         runs = detector_list_data["order_"+str(order)]["runs"][source]
         MC_source_positions = detector_list_data["order_"+str(order)]["MC_source_positions"][source]
         for ind, detector in enumerate(detectors):
+
+            if detector=="V07646A": #result needs checking
+                print("ignoring FCCD result for ",detector, " and source ", source)
+                continue
+
+
             run = runs[ind]
             MC_source_position = MC_source_positions[ind] #=["top","0r","78z"]
             MC_source_pos_hyphon = MC_source_position[0]+"-"+ MC_source_position[1]+"-"+MC_source_position[2] #="top-0r-78z"
 
-            if cuts == False:
-                with open(CodePath+"/../results/FCCD/"+detector+"/"+source+"/FCCD_"+detector+"-"+source_data+"-"+MC_source_pos_hyphon+"_"+smear+"_"+TL_model+"_fracFCCDbore"+str(frac_FCCDbore)+"_"+energy_filter+"_run"+str(run)+"_nocuts.json") as json_file:
-                    FCCD_data = json.load(json_file)
-            else: #4sigma cuts default
-                with open(CodePath+"/../results/FCCD/"+detector+"/"+source+"/FCCD_"+detector+"-"+source_data+"-"+MC_source_pos_hyphon+"_"+smear+"_"+TL_model+"_fracFCCDbore"+str(frac_FCCDbore)+"_"+energy_filter+"_run"+str(run)+"_cuts.json") as json_file:
-                    FCCD_data = json.load(json_file)
+            try:
+                if cuts == False:
+                    with open(CodePath+"/../results/FCCD/"+detector+"/"+source+"/FCCD_"+detector+"-"+source_data+"-"+MC_source_pos_hyphon+"_"+smear+"_"+TL_model+"_fracFCCDbore"+str(frac_FCCDbore)+"_"+energy_filter+"_run"+str(run)+"_nocuts.json") as json_file:
+                        FCCD_data = json.load(json_file)
+                else: #4sigma cuts default
+                    with open(CodePath+"/../results/FCCD/"+detector+"/"+source+"/FCCD_"+detector+"-"+source_data+"-"+MC_source_pos_hyphon+"_"+smear+"_"+TL_model+"_fracFCCDbore"+str(frac_FCCDbore)+"_"+energy_filter+"_run"+str(run)+"_cuts.json") as json_file:
+                        FCCD_data = json.load(json_file)
+            except:
+                print("no FCCD result with ",source," for ", detector)
+                continue
+            
             FCCD = FCCD_data["FCCD"]
             FCCD_err_total_up = FCCD_data["FCCD_err_total_up"]
             FCCD_err_total_low = FCCD_data["FCCD_err_total_low"]
@@ -125,6 +145,10 @@ def plotFCCDs(order_list,source_list):
 
             for detector in detectors:
 
+                if detector=="V07646A": #result needs checking
+                    print("ignoring FCCD result for ",detector, " and source ", source)
+                    continue
+
                 detectors_all.append(detector)
                 orders_all.append(order)
 
@@ -135,9 +159,11 @@ def plotFCCDs(order_list,source_list):
                     FCCD_err_lows_source.append(FCCD_err_low_source)
                     detectors_source.append(detector)
                 except:
-                    print("no ",source," analysis for ", detector)
+                    print("no FCCD result with ",source," for ", detector)
 
             cc = colors_orders[order]
+            if source == "Am241_HS1":
+                cc=lighten_color(cc,1.2)
 
             ax.errorbar(detectors_source,FCCDs_source, yerr = [FCCD_err_lows_source, FCCD_err_ups_source], marker = markers_sources[source], color=cc, linestyle = '-')
             
@@ -160,7 +186,7 @@ def plotFCCDs(order_list,source_list):
     ax.set_ylabel('FCCD (mm)', fontsize=11)
     ax.grid(linestyle='dashed', linewidth=0.5)
     plt.tight_layout()
-    ax.set_ylim(0,2)
+    ax.set_ylim(0.5,1.5)
     ax.set_title("FCCDs", fontsize=12)
     plt.savefig(CodePath+"/../FCCDs.png", bbox_inches='tight') 
     plt.show()

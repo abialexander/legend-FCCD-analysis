@@ -163,6 +163,8 @@ def perform_gammaLineCounting(detector, source, spectra_type, data_path=None, ca
             peak_ranges = [[77,84],[352, 359.5],[158,163],[221,225.5],[274,279],[300,306],[381,386.5]] #Rough by eye
         else:
             peak_ranges = [[77,84],[352.5, 359],[158,163],[221,225.5],[274,279],[300,306],[381,386.5]] #Rough by eye
+            if detector=="V07646A" and source == "Ba133":
+                peak_ranges[0] = [77.5,83.5]
         peaks = [81, 356, 161, 223, 276, 303, 383]
         R_doublePeak = 2.65/32.9 #intensity ratio for Ba-133 double peak
     if source == "Am241_HS1" or source == "Am241_HS6":
@@ -233,11 +235,11 @@ def perform_gammaLineCounting(detector, source, spectra_type, data_path=None, ca
         if (chi_sq/dof > 50 or m.valid == False)and source =="Ba133": #repeat fit with no bounds if bad
             print("refitting...")
             m = Minuit(least_squares, *fitting_func_guess)
-            # m.limits = bounds
-            m.migrad(ncall=10**7, iterate=100) 
+            if detector != "V05266B" or detector !="V07646A": #problematic fitting for these detectors
+                m.limits = bounds
+            m.simplex().migrad(ncall=10**9, iterate=10000)
+            # m.migrad(ncall=10**9, iterate=10000) 
             m.hesse()
-            # m.simplex()
-            # m.migrad(ncall=10**7, iterate=1000)
             chi_sq = m.fval
             dof =  len(bins_centres_peak) - m.nfit
         
