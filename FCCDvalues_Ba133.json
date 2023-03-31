@@ -1,13 +1,13 @@
 {
     "V02160A": {
         "unrounded": {
-            "FCCD": 0.6829226195128724,
-            "FCCD_err_total_up": 0.06145492868965896,
-            "FCCD_err_total_low": 0.06243040346554052,
-            "FCCD_err_corr_up": 0.05373233290196833,
-            "FCCD_err_corr_low": 0.0547513913128822,
-            "FCCD_err_uncorr_up": 0.011209586616372058,
-            "FCCD_err_uncorr_low": 0.011106299031867106
+            "FCCD": 0.6808924097717589,
+            "FCCD_err_total_up": 0.06145809007255287,
+            "FCCD_err_total_low": 0.062434499037173796,
+            "FCCD_err_corr_up": 0.05372898791529512,
+            "FCCD_err_corr_low": 0.054749016381142934,
+            "FCCD_err_uncorr_up": 0.011214334710843654,
+            "FCCD_err_uncorr_low": 0.011111961696184558
         },
         "rounded": {
             "FCCD": 0.68,
