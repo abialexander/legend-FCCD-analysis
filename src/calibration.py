@@ -99,8 +99,11 @@ def perform_calibration(detector, source, data_path, energy_filter, cuts, run):
     print("Calibrating...")
 
     if source == "Ba133":
+        # glines    = [80.9979, 160.61, 223.24, 276.40, 302.85, 356.01, 383.85] # gamma lines used for calibration
+        # range_keV = [(1,1),(1.5,1.5),(2,2),(2.5,2.5),(3,3),(3,3),(3,3)] # side bands width
+
         glines    = [80.9979, 160.61, 223.24, 276.40, 302.85, 356.01, 383.85] # gamma lines used for calibration
-        range_keV = [(1,1),(1.5,1.5),(2,2),(2.5,2.5),(3,3),(3,3),(3,3)] # side bands width
+        range_keV = [(1,1),(1.5,1.5),(2.5,2.5),(2.5,2.5),(3,3),(3,3),(3,3)] # side bands width
 
         guess = 383/(energy_filter_data.quantile(0.9))
 
@@ -152,7 +155,7 @@ def perform_calibration(detector, source, data_path, energy_filter, cuts, run):
 
     xpb = 0.1
     xlo = 0
-    xhi = 450 if source == "Ba133" else 120
+    xhi = 450 if source == "Ba133" else 130
 
     nb = int((xhi-xlo)/xpb)
     hist_pass, bin_edges = np.histogram(ecal_pass, range=(xlo, xhi), bins=nb)
@@ -204,25 +207,32 @@ def perform_calibration(detector, source, data_path, energy_filter, cuts, run):
         fit_qbb = fwhm_slope(2039.0,fit_pars[0],fit_pars[1],fit_pars[2])
         print('FWHM energy resolution at Qbb: %1.2f keV' % fit_qbb)
 
-        fig, (ax1, ax2) = plt.subplots(2, 1, constrained_layout=True, sharex=True)
-        ax1.errorbar(fwhm_peaks,fwhms,yerr=dfwhms, marker='o',lw=0, c='b')
-        ax1.plot(fwhm_peaks,fit_vals,lw=1, c='g')
+        # fig, (ax1, ax2) = plt.subplots(2, 1, constrained_layout=True, sharex=True)
+        fig, (ax1, ax2) = plt.subplots(2, 1, sharex=True, gridspec_kw={"height_ratios":[2,1]})
+        ax1.errorbar(fwhm_peaks,fwhms,yerr=dfwhms, marker='o',linestyle='none', c='b', label="Data")
+        ax1.plot(fwhm_peaks,fit_vals,lw=1, c='g', linestyle="-", label=R"Fit: $\sqrt{a+bE}$")
         ax1.set_ylabel("FWHM (keV)", ha='right', y=1)
+        ax1.legend()
 
-        ax2.plot(fitted_peaks,pgp.poly(mus, pars)-fitted_peaks, marker='o', lw=1, c='b')
+        print(fwhm_peaks)
+        residuals = (fwhms-fit_vals)
+        # residuals = (np.array(fitted_peaks)-np.array(fitted_peaks,pgp.poly(mus, pars)))/np.array(fitted_peaks,pgp.poly(mus, pars))
+        ax2.plot(fwhm_peaks,residuals, marker='o', lw=1, c='b')
         ax2.set_xlabel("Energy (keV)",    ha='right', x=1)
         ax2.set_ylabel("Residuals (keV)", ha='right', y=1)
+        ax2.set_ylim([-0.1,0.1])
+        ax2.axhline(0, 0, xhi, color="grey", linestyle="-", linewidth=0.5)
+
 
         fig.suptitle(plot_title)
 
         if cuts == False:
-            plt.savefig(outputFolder+"plots/calibration_curve_"+energy_filter+"_run"+str(run)+"_nocuts.png")
+            plt.savefig(outputFolder+"plots/resolution_curve_"+energy_filter+"_run"+str(run)+"_nocuts.png")
         else:
-            plt.savefig(outputFolder+"plots/calibration_curve_"+energy_filter+"_run"+str(run)+"_cuts.png")
+            plt.savefig(outputFolder+"plots/resolution_curve_"+energy_filter+"_run"+str(run)+"_cuts.png")
         
         #=========Save Calibration Coefficients==========
         dict = {energy_filter: {"resolution": list(fit_pars), "calibration": list(pars)}}
-        print(dict)
         if cuts == False:
             with open(outputFolder+"calibration_run"+str(run)+"_nocuts.json", "w") as outfile:
                 json.dump(dict, outfile, indent=4)
@@ -230,6 +240,7 @@ def perform_calibration(detector, source, data_path, energy_filter, cuts, run):
             with open(outputFolder+"calibration_run"+str(run)+"_cuts.json", "w") as outfile:
                 json.dump(dict, outfile, indent=4)
 
+    plt.show()
     plt.close("all")
     print("done")
     print("")

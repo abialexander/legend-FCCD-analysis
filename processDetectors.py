@@ -55,9 +55,9 @@ def main():
 
         for ind, detector in enumerate(detectors):
 
-            # if detector != "V04549A": ##or detector != "V08682B" or detector != "V09724A":
-            # # # if detector == "V07646A" or detector == "V07302A":
-            #     continue
+            if detector != "V04549A": ##or detector != "V08682B" or detector != "V09724A":
+            # # if detector == "V07646A" or detector == "V07302A":
+                continue
             print("")
             print("detector: ", detector)
 
