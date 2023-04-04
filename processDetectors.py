@@ -19,7 +19,7 @@ def main():
     # EDIT PROCESSING CONFIG BELOW
     #====================================================
     order_list = [2,4,5,7,8,9] #List of orders to process
-    source = "Ba133" #"Ba133", "Am241_HS1" or "Am241_HS6"
+    source = "Am241_HS1" #"Ba133", "Am241_HS1" or "Am241_HS6"
     energy_filter="cuspEmax_ctc"
     cuts=True
     #-----------------------------------------------------

@@ -99,9 +99,6 @@ def perform_calibration(detector, source, data_path, energy_filter, cuts, run):
     print("Calibrating...")
 
     if source == "Ba133":
-        # glines    = [80.9979, 160.61, 223.24, 276.40, 302.85, 356.01, 383.85] # gamma lines used for calibration
-        # range_keV = [(1,1),(1.5,1.5),(2,2),(2.5,2.5),(3,3),(3,3),(3,3)] # side bands width
-
         glines    = [80.9979, 160.61, 223.24, 276.40, 302.85, 356.01, 383.85] # gamma lines used for calibration
         range_keV = [(1,1),(1.5,1.5),(2.5,2.5),(2.5,2.5),(3,3),(3,3),(3,3)] # side bands width
 
