@@ -19,7 +19,7 @@ def main():
     # EDIT PROCESSING CONFIG BELOW
     #====================================================
     order_list = [2,4,5,7,8,9] #List of orders to process
-    source = "Am241_HS1" #"Ba133", "Am241_HS1" or "Am241_HS6"
+    source = "Ba133" #"Ba133", "Am241_HS1" or "Am241_HS6"
     energy_filter="cuspEmax_ctc"
     cuts=True
     #-----------------------------------------------------
@@ -55,9 +55,8 @@ def main():
 
         for ind, detector in enumerate(detectors):
 
-            if detector != "V04549A": ##or detector != "V08682B" or detector != "V09724A":
-            # # if detector == "V07646A" or detector == "V07302A":
-                continue
+            # if detector != "V04549A": ##or detector != "V08682B" or detector != "V09724A":
+            #     continue
             print("")
             print("detector: ", detector)
 
@@ -72,7 +71,7 @@ def main():
 
                 detector_name = "I"+detector[1:] if order == 2 else detector  
                 data_path = data_folder_ICPC+detector_name+"/tier2/"+source_data+"_top_dlt/" if detector_type == "ICPC" else data_folder_BEGe+detector_name+"/tier2/"+source_data+"_top_dlt/"
-                perform_calibration(detector, source, data_path, energy_filter, cuts, run)
+                perform_calibration(detector, source, data_path, energy_filter, cuts, run, plot_calibration_curve=True)
 
             #========Gamma line count - DATA==========
             if Gamma_line_count_data == True:
