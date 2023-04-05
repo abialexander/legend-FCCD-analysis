@@ -121,13 +121,18 @@ def plotCalibrationCurve(calResults,xlo,xhi,plot_title=None,plotPath=None,residu
     uncalE_mus = np.array([pars[1] for pars in pk_pars]).astype(float)
     pk_covs = calResults['pk_covs']
     uncalE_mus_err = np.array([np.sqrt(cov[1][1]) for cov in pk_covs]).astype(float)
-    truthE = np.array(calResults["got_peaks_keV"])
+    truthEs_old = np.array(calResults["got_peaks_keV"])
+    truthEs=[]
+    for i, uncalE_mu in enumerate(uncalE_mus):
+        truthE = calResults["got_peaks_keV"][i]
+        truthEs.append(truthE)
+    truthEs=np.array(truthEs)
     pk_cal_pars = np.array(calResults["pk_cal_pars"]) #pars from cal to uncal
 
     fig, (ax1, ax2) = plt.subplots(2, 1, sharex=True, gridspec_kw={"height_ratios":[2,1]})
-    ax1.errorbar(truthE,uncalE_mus,yerr=uncalE_mus_err, marker='o',linestyle='none', c='b', label="Data")
-    fit = pgp.poly(truthE, pk_cal_pars)
-    ax1.plot(truthE,fit,lw=1, c='g', linestyle="-", label=R"Linear fit")
+    ax1.errorbar(truthEs,uncalE_mus,yerr=uncalE_mus_err, marker='o',linestyle='none', c='b', label="Data")
+    fit = pgp.poly(truthEs, pk_cal_pars)
+    ax1.plot(truthEs,fit,lw=1, c='g', linestyle="-", label=R"Linear fit")
     ax1.set_ylabel("Uncalibrated Energy (ADC)", ha='right', y=1, fontsize=10)
     ax1.legend()
 
@@ -138,7 +143,7 @@ def plotCalibrationCurve(calResults,xlo,xhi,plot_title=None,plotPath=None,residu
     elif residuals == "error":
         residuals = (uncalE_mus-fit)/uncalE_mus_err
         residual_lbl = r"$(Data-Fit)/\sigma_{Data}$"
-    ax2.plot(truthE,residuals, marker='o', lw=1, c='b')
+    ax2.plot(truthEs,residuals, marker='o', lw=1, c='b')
     ax2.set_ylabel(residual_lbl, ha='right', y=1, fontsize=10)
     ax2.axhline(0, 0, xhi, color="grey", linestyle="-", linewidth=0.5)
     ax2.set_xlabel("Calibrated Energy (keV)", ha='right', x=1, fontsize=10)

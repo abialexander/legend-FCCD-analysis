@@ -1,5 +1,7 @@
 /src/__pycache__/
 
+misc/
+
 !results/
 results/*
 !results/*/
