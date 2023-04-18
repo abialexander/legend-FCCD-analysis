@@ -160,6 +160,64 @@ def plotSpectra(detector, source, MC_id, sim_path, FCCD, DLF, data_path, calibra
     print("done")
 
 
+def plotSpectra_nosmear(detector, source, MC_id, sim_path):
+    """
+    Plot smear and no smear MC spectra
+    args: 
+        - detector
+        - source ("Ba133", "Am241_HS1")
+        - MC_id ({detector}-ba_HS4-top-0r-78z_${smear}_${TL_model}_FCCD${FCCD}mm_DLF${DLF}_fracFCCDbore${frac_FCCDbore}
+        - sim_path (path to AV processed sim, e.g. /lfs/l1/legend/users/aalexander/legend-g4simple-simulation/legend/simulations/${detector}/ba_HS4/top_0r_78z/hdf5/AV_processed/${MC_id}.hdf5
+    """
+
+    #initialise directories to save spectra
+    dir=os.path.dirname(os.path.realpath(__file__))
+    outputFolder = dir+"/../results/Spectra/"+detector+"/"+source+"/plots/"
+    if not os.path.exists(outputFolder):
+        os.makedirs(outputFolder)
+
+
+    #==========================================================
+    #LOAD ENERGY SPECTRA
+    #==========================================================
+
+    #GET MC smear
+    df =  pd.read_hdf(sim_path, key="procdf")
+    energy_MC = df['energy']
+
+    #GET MC no smear
+    sim_path_nosmear = sim_path.replace("_g_", "_nosmear_")
+    print(sim_path_nosmear)
+    df_nosmear =  pd.read_hdf(sim_path_nosmear, key="procdf")
+    energy_MC_nosmear = df_nosmear['energy']*1000
+
+    #==========================================================
+    #PLOT MC smear and no smear
+    #==========================================================
+    binwidth = 0.25 #keV
+    xlo = 0
+    xhi = 450 if source == "Ba133" else 120
+    bins = np.arange(xlo,xhi,binwidth)
+    bins_centres = (bins[:-1] + bins[1:])/2
+    
+    fig = plt.figure()
+
+    linewidth = 1
+    counts_MC_nosmear, bins, bars = plt.hist(energy_MC_nosmear, bins = bins, label = "no smear", histtype = 'step', linewidth = linewidth)
+    counts_MC, bins, bars = plt.hist(energy_MC, bins = bins, label = "smear", histtype = 'step', linewidth = linewidth)
+    plt.xlabel("Energy [keV]")
+    plt.ylabel("Counts / "+str(binwidth)+" keV")
+    plt.yscale("log")
+    plt.legend(loc = "lower left")
+    plt.title(detector+", "+source)
+    plt.xlim(xlo,xhi)
+
+    plt.savefig(outputFolder+MC_id+"_smearcomparison.png")
+
+    plt.show()
+    print("done")
+
+
 
 
 

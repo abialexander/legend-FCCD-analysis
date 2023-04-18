@@ -2,6 +2,7 @@ from src.calibration import *
 from src.GammaLineCounting import *
 from src.FCCD import *
 from src.plotSpectra import *
+from src.rawMCHits import *
 
 def main():
 
@@ -18,17 +19,22 @@ def main():
     #====================================================
     # EDIT PROCESSING CONFIG BELOW
     #====================================================
-    order_list = [8,9] #List of orders to process
+    order_list = [4] #List of orders to process
     source = "Ba133" #"Ba133", "Am241_HS1" or "Am241_HS6"
     energy_filter="cuspEmax_ctc"
     cuts=True
     #-----------------------------------------------------
-    Calibrate_Data = True  #Pre-reqs: needs dsp pygama data
+    #Routine Scripts
+    Calibrate_Data = False  #Pre-reqs: needs dsp pygama data
     Gamma_line_count_data = False #Pre-reqs: needs calibration
     Gamma_line_count_MC = False #Pre-reqs: needs AV post processed MC for range of FCCDs
     Calculate_FCCD = False #Pre-reqs: needs gammaline counts for data and MC
     Gamma_line_count_MC_bestfitFCCD = False #Pre-reqs: needs AV postprocessed MC for best fit FCCD
     PlotSpectra = False #Pre-reqs: needs all above stages
+
+    #Optional Scripts
+    PlotSpectra_nosmear = False
+    PlotMCHits = True
     #====================================================
 
     if source == "Ba133":
@@ -55,13 +61,12 @@ def main():
 
         for ind, detector in enumerate(detectors):
 
-            # if detector != "V04549A":
-            # if detector != "V05612B":
-            #     continue
+            if detector != "V04549A":
+                continue
+
             print("")
             print("detector: ", detector)
 
-            # print(runs)
             run = runs[ind]
             MC_source_position = MC_source_positions[ind] #=["top","0r","78z"]
             MC_source_pos_underscore = MC_source_position[0]+"_"+ MC_source_position[1]+"_"+MC_source_position[2] #="top_0r_78z"
@@ -167,6 +172,29 @@ def main():
                 sim_path=sim_folder+detector+"/"+source_data+"/"+MC_source_pos_underscore+"/hdf5/AV_processed/"+MC_id+".hdf5"
 
                 plotSpectra(detector, source, MC_id, sim_path, FCCD, DLF, data_path, calibration, energy_filter, cuts, run)
+        
+            #========OPTIONAL==========
+
+
+            #========Plot Spectra Smear Comparison==========
+            if PlotSpectra_nosmear == True:
+                
+                #data args
+                DLF=1.0
+                smear="g"
+                frac_FCCDbore=0.5
+                FCCD=1.0
+                TL_model="l"
+                MC_id = detector+"-"+source_data+"-"+MC_source_pos_hyphon+"_"+smear+"_"+TL_model+"_FCCD"+str(FCCD)+"mm_DLF"+str(DLF)+"_fracFCCDbore"+str(frac_FCCDbore)
+                sim_path=sim_folder+detector+"/"+source_data+"/"+MC_source_pos_underscore+"/hdf5/AV_processed/"+MC_id+".hdf5"
+
+                plotSpectra_nosmear(detector, source, MC_id, sim_path)
+            
+            # #========Plot MC hits==========
+            if PlotMCHits == True:
+                MC_id=detector+"-"+source_data+"-"+MC_source_pos_hyphon
+                MC_raw_path=sim_folder+detector+"/"+source_data+"/"+MC_source_pos_underscore+"/hdf5/"
+                plotMCHits(detector, source, MC_raw_path, MC_id,reopen_saved=True)
 
 
 if __name__ == "__main__":

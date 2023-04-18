@@ -5,7 +5,10 @@ import pandas as pd
 import h5py
 import numpy as np
 import matplotlib.pyplot as plt
-
+from matplotlib.pyplot import cm
+from matplotlib.colors import LogNorm
+import matplotlib as mpl
+import matplotlib.pylab as plt
 
 def combine_simulations(MC_raw_path, MC_id):
     "combine all g4simple .hdf5 simulations within a folder into one dataframe"
@@ -58,28 +61,52 @@ def plotMCHits(detector, source, MC_raw_path, MC_id, reopen_saved=False):
     # print(df_pp)
 
     CodePath=os.path.dirname(os.path.realpath(__file__))
-    outputFolder = CodePath+"/../"
+    outputFolder = CodePath+"/../misc/"
 
     if reopen_saved == False:
         #combine simulations and save df_total temporarily
         df_total = combine_simulations(MC_raw_path, MC_id)
-        df_total.to_hdf(outputFolder+"misc/hdf5/rawMCHits_"+MC_id+'.hdf5', key='procdf', mode='w')
+        df_total.to_hdf(outputFolder+"hdf5/rawMCHits_"+MC_id+'.hdf5', key='procdf', mode='w')
     else:
         #reopen MC
-        df_total =  pd.read_hdf(outputFolder+"misc/hdf5/rawMCHits_"+MC_id+'.hdf5', key="procdf")
+        df_total =  pd.read_hdf(outputFolder+"hdf5/rawMCHits_"+MC_id+'.hdf5', key="procdf")
 
     Edeps = df_total["Edep"].to_list()
     x_coords = df_total["x"].to_list()
     y_coords = df_total["y"].to_list()
     z_coords = df_total["z"].to_list()
-    # print(Edeps)
-    print(x_coords)
 
-    heatmap, xedges, yedges = np.histogram2d(x_coords, y_coords, bins=100)
+    #Get energy range of 356 and 81 peaks
+
+
+
+
+    heatmap, xedges, yedges = np.histogram2d(x_coords, y_coords, bins=250)
     extent = [xedges[0], xedges[-1], yedges[0], yedges[-1]]
     plt.clf()
-    plt.imshow(heatmap.T, extent=extent, origin='lower')
+    # plt.imshow(heatmap.T, extent=extent, origin='lower',interpolation='nearest', cmap="YlOrRd", norm=LogNorm())
+    par = plt.hist2d(x_coords, y_coords, bins=(250,250), norm=mpl.colors.LogNorm(), cmap="YlOrRd")
+    
+    plt.ylabel("y / cm")
+    plt.xlabel("x / cm")
+    plt.colorbar()
+    plt.gca().set_aspect('equal')
+    plt.savefig(outputFolder+"rawMCHits_xy_"+MC_id+".png")
     plt.show()
+    plt.close("all")
+
+    heatmap, xedges, yedges = np.histogram2d(x_coords, z_coords, bins=250)
+    extent = [xedges[0], xedges[-1], yedges[0], yedges[-1]]
+    plt.clf()
+    # plt.imshow(heatmap.T, extent=extent, origin='lower', interpolation='nearest', cmap="YlOrRd", norm=LogNorm())
+    par = plt.hist2d(x_coords, z_coords, bins=(250,250), norm=mpl.colors.LogNorm(), cmap="YlOrRd")
+    plt.colorbar()
+    plt.ylabel("z / cm")
+    plt.xlabel("x / cm")
+    plt.gca().set_aspect('equal')
+    plt.savefig(outputFolder+"rawMCHits_xz_"+MC_id+".png")
+    plt.show()
+
 
     # arr_Edeps = np.zeros((len(y_coords), len(x_coords)))
 
