@@ -30,11 +30,11 @@ def main():
     Gamma_line_count_MC = False #Pre-reqs: needs AV post processed MC for range of FCCDs
     Calculate_FCCD = False #Pre-reqs: needs gammaline counts for data and MC
     Gamma_line_count_MC_bestfitFCCD = False #Pre-reqs: needs AV postprocessed MC for best fit FCCD
-    PlotSpectra = False #Pre-reqs: needs all above stages
+    PlotSpectra = True #Pre-reqs: needs all above stages
 
     #Optional Scripts
     PlotSpectra_nosmear = False
-    PlotMCHits = True
+    PlotMCHits = False
     #====================================================
 
     if source == "Ba133":
@@ -61,6 +61,7 @@ def main():
 
         for ind, detector in enumerate(detectors):
 
+            # if detector != "V07646A":
             if detector != "V04549A":
                 continue
 
@@ -104,6 +105,9 @@ def main():
                 if source == "Ba133":
                     FCCD_list=[0.0,0.25, 0.5, 0.75, 1.0, 1.25, 1.5, 3.0] #ICPCs
                     # FCCD_list=[0.0,0.25, 0.5, 0.75, 1.0, 1.25, 1.5,1.75,2.0, 3.0] #BEGes
+                    if detector == "V07646A":
+                        # FCCD_list = [0.0,0.25, 0.5, 0.75, 1.0, 1.25, 1.5, 1.75, 2.0, 2.5, 3.0]
+                        FCCD_list = [0.0,0.1,0.2,0.3,0.4,0.5, 0.6,0.7,0.8,0.9,1.0,1.1,1.2,1.3,1.4,1.5,1.6,1.7,1.8,1.9,2.0,2.1,2.2,2.3,2.4,2.5]
                 elif source == "Am241_HS1":
                     FCCD_list=[0.0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1.0, 1.1, 1.2, 1.3, 1.4, 1.5, 1.6, 1.7, 1.8, 1.9, 2.0]
                 for FCCD in FCCD_list:

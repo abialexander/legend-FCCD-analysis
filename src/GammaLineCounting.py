@@ -85,7 +85,7 @@ def triple_gauss_double_step_pdf(x, a, mu1, sigma1, bkg1, s1, mu2, sigma2, a3, m
     return f
     
 
-def perform_gammaLineCounting(detector, source, spectra_type, data_path=None, calibration=None, energy_filter=None, cuts=None, run=None, sim_path=None, MC_id=None):
+def perform_gammaLineCounting(detector, source, spectra_type, data_path=None, calibration=None, energy_filter=None, cuts=None, run=None, sim_path=None, MC_id=None, returnMCpeakHist=False):
     """
     Perform the gammaline counting on relevant gammaline peaks in Ba or Am, data or MC spectra
     main args: 
@@ -106,6 +106,9 @@ def perform_gammaLineCounting(detector, source, spectra_type, data_path=None, ca
 
     if spectra_type == "MC" and (sim_path is None or MC_id is None):
         print("Need input args of <sim_path> and/or <MC_id>")
+        sys.exit()
+    if spectra_type != "MC" and returnMCpeakHist==True:
+        print("Need spectra_type=MC for returnMCpeakHist")
         sys.exit()
     if spectra_type == "data" and (data_path is None or calibration is None or energy_filter is None or cuts is None or run is None):
         print("Need input args of <data_path>, <calibration>, <energy_filter>, <cuts>, <run> ")
@@ -134,6 +137,8 @@ def perform_gammaLineCounting(detector, source, spectra_type, data_path=None, ca
         energies = energy_filter_data*m + c
     
     if spectra_type == "MC":
+
+        FCCD_str = MC_id.split("FCCD")[1].split("mm")[0]
 
         #initialise directories for detectors to save
         outputFolder = dir+"/../results/PeakCounts/"+detector+"/"+source+"/MC/plots/"
@@ -177,6 +182,11 @@ def perform_gammaLineCounting(detector, source, spectra_type, data_path=None, ca
         #prepare histogram
         print(str(peaks[index]), " keV")
         xmin, xmax = i[0], i[1]
+        # if detector == "V07646A" and source == "Ba133" and peaks[index]==81:
+        #     if FCCD_str == "1.25":
+        #         xmin, xmax = 78.5, 82.5
+        #     elif FCCD_str == "1.5":
+        #         xmin, xmax = 78, 82.5
         bins_peak = np.arange(xmin,xmax,binwidth)
         hist_peak, bins_peak, var_peak = histograms.get_hist(energies, bins=bins_peak)
         bins_centres_peak = histograms.get_bin_centers(bins_peak)
@@ -188,6 +198,11 @@ def perform_gammaLineCounting(detector, source, spectra_type, data_path=None, ca
         hist_peak, bins_centres_peak, yerr  = hist_peak[mask], bins_centres_peak[mask], yerr[mask]
         bins_peak = bins_centres_peak- 0.5*binwidth
         bins_peak = np.append(bins_peak, bins_peak[-1]+binwidth)
+
+        if returnMCpeakHist == True:
+            print("returning MC peak hist only")
+            return hist_peak, bins_peak, bins_centres_peak, peaks[index]
+            continue
 
         #fit function initial guess
         if peaks[index] == 81: #Ba double peak
@@ -235,10 +250,9 @@ def perform_gammaLineCounting(detector, source, spectra_type, data_path=None, ca
         if (chi_sq/dof > 50 or m.valid == False)and source =="Ba133": #repeat fit with no bounds if bad
             print("refitting...")
             m = Minuit(least_squares, *fitting_func_guess)
-            if detector != "V05266B" or detector !="V07646A": #problematic fitting for these detectors
+            if detector != "V05266B": #problematic fitting for these detectors
                 m.limits = bounds
             m.simplex().migrad(ncall=10**9, iterate=10000)
-            # m.migrad(ncall=10**9, iterate=10000) 
             m.hesse()
             chi_sq = m.fval
             dof =  len(bins_centres_peak) - m.nfit
@@ -385,7 +399,12 @@ def perform_gammaLineCounting(detector, source, spectra_type, data_path=None, ca
                 with open(outputFolder+"../PeakCounts_"+detector+"_"+energy_filter+"_run"+str(run)+"_cuts"+str(sigma_cuts)+"sigma.json", "w") as outfile:
                     json.dump(PeakCounts, outfile, indent=4)
 
-            
+
+def compareMCGammaLines(detector, source, sim_path=None, MC_id=None):
+
+    spectra_type="MC"
+    returnMCpeakHist=True
+    peak_list = [81, 356]
 
 
 

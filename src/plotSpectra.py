@@ -3,6 +3,8 @@ import json
 from matplotlib import gridspec
 from src.calibration import *
 from src.compareResults import lighten_color
+from scipy.stats import poisson, norm
+from matplotlib import patches
 
 def computeDataMCratios(energy_bins_centres, counts_data, counts_MC, scaling_MC=None, residuals = False):
     "compute the ratio of data/MC for 2 histograms (shared energy bins, counts_data and counts_MC)"
@@ -38,6 +40,68 @@ def computeDataMCratios(energy_bins_centres, counts_data, counts_MC, scaling_MC=
 
 
     return Data_MC_ratios, Data_MC_ratios_err
+
+def smallest_poisson_interval(cov, mu):
+
+    res = [mu,mu]
+    mode = math.floor(mu) #start from the mode=integer part of the mean
+    l = mode
+    u = mode
+    prob = poisson.pmf(mode,mu)
+    while (prob < cov):
+        prob_u = poisson.pmf(u+1, mu)
+        l_new=l-1 if l>0 else 0
+        prob_l = poisson.pmf(l_new, mu)
+        # we expand on the right if:
+        #- the lower edge is already at zero
+        #- the prob of the right point is higher than the left
+        if (l == 0 or prob_u > prob_l):
+            u += 1
+            prob += prob_u
+        #otherwhise we expand on the left
+        elif (prob_u < prob_l):
+            l-= 1
+            prob += prob_l
+        #if prob_u == prob_l we expand on both sides
+        else:
+            u += 1
+            l -= 1
+            prob += prob_u + prob_l
+    l_n=0 if l==0 else l-0.5
+    res = [l_n, u+0.5]
+    return res
+
+def draw_poisson_bands(mu, x_low, x_size, residuals = False):
+
+    sig1 = smallest_poisson_interval(0.682, mu)
+    sig2 = smallest_poisson_interval(0.954, mu)
+    sig3 = smallest_poisson_interval(0.997, mu)
+
+    if (residuals) :
+        if (mu != 0):
+            sig1[0] /= mu
+            sig1[1] /= mu
+            sig2[0] /= mu
+            sig2[1] /= mu
+            sig3[0] /= mu
+            sig3[1] /= mu
+        else:
+            sig1[0] = sig1[1] = 1
+            sig2[0] = sig2[1] = 1
+            sig3[0] = sig3[1] = 1
+
+    cent_b1 = (sig1[1] + sig1[0])/2
+    cent_b2 = (sig2[1] + sig2[0])/2
+    cent_b3 = (sig3[1] + sig3[0])/2
+
+    xdw = x_low
+    xup = x_low + x_size
+
+    box_b1 = patches.Rectangle((xdw, sig1[0]), width=abs(xup-xdw),height=abs(sig1[1]-sig1[0]),color='yellowgreen')
+    box_b2 = patches.Rectangle((xdw, sig2[0]), width=abs(xup-xdw),height=abs(sig2[1]-sig2[0]), color='gold')
+    box_b3 = patches.Rectangle((xdw, sig3[0]), width=abs(xup-xdw),height=abs(sig3[1]-sig3[0]), color='orange')
+
+    return box_b1, box_b2, box_b3
 
 
 def plotSpectra(detector, source, MC_id, sim_path, FCCD, DLF, data_path, calibration, energy_filter, cuts, run):
@@ -125,26 +189,33 @@ def plotSpectra(detector, source, MC_id, sim_path, FCCD, DLF, data_path, calibra
     linewidth = 0.35 if binwidth<0.2 else 0.5
     counts_data, bins, bars_data = ax0.hist(energy_data, bins=bins,  label = "Data", histtype = 'step', linewidth = linewidth)
     scaling_MC = C_scale_data/C_scale_MC #scaling of MC
-    counts_MC, bins, bars = ax0.hist(energy_MC, bins = bins, weights=(scaling_MC)*np.ones_like(energy_MC), label = "MC: FCCD "+str(FCCD)+"mm, DLF: "+str(DLF)+" (scaled)", histtype = 'step', linewidth = linewidth)
+    counts_MC, bins, bars = ax0.hist(energy_MC, bins = bins, weights=(scaling_MC)*np.ones_like(energy_MC), label = "MC: FCCD "+str(FCCD)+"mm (scaled)", histtype = 'step', linewidth = linewidth)
 
     #compute ratio of data/MC
-    Data_MC_ratios, Data_MC_ratios_err = computeDataMCratios(bins_centres, counts_data, counts_MC, scaling_MC=scaling_MC, residuals=True)
+    Data_MC_ratios, Data_MC_ratios_err = computeDataMCratios(bins_centres, counts_data, counts_MC, scaling_MC=scaling_MC, residuals=False)
     # ax1.errorbar(bins_centres, Data_MC_ratios, yerr=Data_MC_ratios_err, color="dimgrey", elinewidth = linewidth, fmt='o', ms = 1.0, mew = 1.0)
     # ax1.hlines(0, xlo, xhi, colors="gray", linestyles='dashed', linewidth=linewidth) 
-    
-    # colors = ["lightblue", "lightyellow", "lightsalmon", "lightgreen"]
-    ax1.fill_between(bins_centres, -3*np.array(Data_MC_ratios_err), 3*np.array(Data_MC_ratios_err), label=r'3$\sigma$', color=lighten_color("lightsalmon",0.75))
-    ax1.fill_between(bins_centres, -2*np.array(Data_MC_ratios_err), 2*np.array(Data_MC_ratios_err), label=r'2$\sigma$', color=lighten_color("lightyellow", 0.75))
-    ax1.fill_between(bins_centres, -1*np.array(Data_MC_ratios_err), Data_MC_ratios_err, label=r'1$\sigma$', color=lighten_color("lightgreen", 0.75))
+    # ax1.fill_between(bins_centres, -3*np.array(Data_MC_ratios_err), 3*np.array(Data_MC_ratios_err), label=r'3$\sigma$', color=lighten_color("lightsalmon",0.75))
+    # ax1.fill_between(bins_centres, -2*np.array(Data_MC_ratios_err), 2*np.array(Data_MC_ratios_err), label=r'2$\sigma$', color=lighten_color("lightyellow", 0.75))
+    # ax1.fill_between(bins_centres, -1*np.array(Data_MC_ratios_err), Data_MC_ratios_err, label=r'1$\sigma$', color=lighten_color("lightgreen", 0.75))
+    # ax1.plot(bins_centres, Data_MC_ratios, marker="o",color="black", linestyle='None', ms=0.5)
+    # # ax1.set_ylabel(r'(Data-MC)/MC')
+    # # ax1.set_ylim(-5,5)
+
+    #NEW BANDS
     ax1.plot(bins_centres, Data_MC_ratios, marker="o",color="black", linestyle='None', ms=0.5)
-    ax1.set_ylabel(r'(Data-MC)/MC')
-    ax1.set_ylim(-5,5)
-    # ax1.legend()
-    
+    for c,b,l, in zip(counts_MC, bins, pgh.get_bin_widths(bins)):
+        box1b, box2b, box3b = draw_poisson_bands(c,b,l,True)
+        ax1.add_patch(box3b)
+        ax1.add_patch(box2b)
+        ax1.add_patch(box1b)
+    ax1.set_yscale("log")
+    ax1.set_ylabel("Data/MC")
+
     plt.xlabel("Energy [keV]")
     ax0.set_ylabel("Counts / "+str(binwidth)+" keV")
     ax0.set_yscale("log")
-    ax0.legend(loc = "lower left")
+    ax0.legend(loc = "lower left", fontsize=9)
     ax0.set_title(detector+", "+source)
     ax1.set_xlim(xlo,xhi)
     ax0.set_xlim(xlo,xhi)
@@ -156,7 +227,7 @@ def plotSpectra(detector, source, MC_id, sim_path, FCCD, DLF, data_path, calibra
     else:
         plt.savefig(outputFolder+"DataMC_"+MC_id+"_"+energy_filter+"_run"+str(run)+"_cuts.png")
 
-    # plt.show()
+    plt.show()
     print("done")
 
 
@@ -199,7 +270,7 @@ def plotSpectra_nosmear(detector, source, MC_id, sim_path):
     xhi = 450 if source == "Ba133" else 120
     bins = np.arange(xlo,xhi,binwidth)
     bins_centres = (bins[:-1] + bins[1:])/2
-    
+     
     fig = plt.figure()
 
     linewidth = 1
