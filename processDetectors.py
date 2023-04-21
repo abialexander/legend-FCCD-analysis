@@ -30,11 +30,12 @@ def main():
     Gamma_line_count_MC = False #Pre-reqs: needs AV post processed MC for range of FCCDs
     Calculate_FCCD = False #Pre-reqs: needs gammaline counts for data and MC
     Gamma_line_count_MC_bestfitFCCD = False #Pre-reqs: needs AV postprocessed MC for best fit FCCD
-    PlotSpectra = True #Pre-reqs: needs all above stages
+    PlotSpectra = False #Pre-reqs: needs all above stages
 
     #Optional Scripts
     PlotSpectra_nosmear = False
     PlotMCHits = False
+    PlotComparisonMCGammaLine = True
     #====================================================
 
     if source == "Ba133":
@@ -194,11 +195,17 @@ def main():
 
                 plotSpectra_nosmear(detector, source, MC_id, sim_path)
             
-            # #========Plot MC hits==========
+            #========Plot MC hits==========
             if PlotMCHits == True:
                 MC_id=detector+"-"+source_data+"-"+MC_source_pos_hyphon
                 MC_raw_path=sim_folder+detector+"/"+source_data+"/"+MC_source_pos_underscore+"/hdf5/"
                 plotMCHits(detector, source, MC_raw_path, MC_id,reopen_saved=True)
+
+            #========Plot Comparison of MC Gamma Lines==========
+            if PlotComparisonMCGammaLine == True:
+                sim_folder_det = sim_folder+detector+"/"+source_data+"/"+MC_source_pos_underscore+"/hdf5/AV_processed/"
+                MC_id=detector+"-"+source_data+"-"+MC_source_pos_hyphon
+                compareMCGammaLines(detector, source, MC_id, sim_folder_det)
 
 
 if __name__ == "__main__":

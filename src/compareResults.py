@@ -97,7 +97,7 @@ def collateFCCDs(order_list, source, energy_filter="cuspEmax_ctc", cuts=True, sm
             "FCCD_err_corr_low": round(FCCD_err_corr_low,2),  
             "FCCD_err_uncorr_up":round(FCCD_err_uncorr_up,2),
             "FCCD_err_uncorr_low": round(FCCD_err_uncorr_low,2)
-            }
+            } 
         
             dict_det = {"unrounded": dict, "rounded": dict_round2dp}
             dict_all[detector]=dict_det

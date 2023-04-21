@@ -85,7 +85,7 @@ def triple_gauss_double_step_pdf(x, a, mu1, sigma1, bkg1, s1, mu2, sigma2, a3, m
     return f
     
 
-def perform_gammaLineCounting(detector, source, spectra_type, data_path=None, calibration=None, energy_filter=None, cuts=None, run=None, sim_path=None, MC_id=None, returnMCpeakHist=False):
+def perform_gammaLineCounting(detector, source, spectra_type, data_path=None, calibration=None, energy_filter=None, cuts=None, run=None, sim_path=None, MC_id=None, returnMCpeakHist=False, returnMCpeakHist_peaklist=None):
     """
     Perform the gammaline counting on relevant gammaline peaks in Ba or Am, data or MC spectra
     main args: 
@@ -107,8 +107,8 @@ def perform_gammaLineCounting(detector, source, spectra_type, data_path=None, ca
     if spectra_type == "MC" and (sim_path is None or MC_id is None):
         print("Need input args of <sim_path> and/or <MC_id>")
         sys.exit()
-    if spectra_type != "MC" and returnMCpeakHist==True:
-        print("Need spectra_type=MC for returnMCpeakHist")
+    if (spectra_type != "MC" and returnMCpeakHist==True) or (returnMCpeakHist==True and returnMCpeakHist_peaklist is None) :
+        print("Need spectra_type=MC and returnMCpeakHist_peaklist = [81, 356] for returnMCpeakHist")
         sys.exit()
     if spectra_type == "data" and (data_path is None or calibration is None or energy_filter is None or cuts is None or run is None):
         print("Need input args of <data_path>, <calibration>, <energy_filter>, <cuts>, <run> ")
@@ -177,7 +177,12 @@ def perform_gammaLineCounting(detector, source, spectra_type, data_path=None, ca
         peaks = [103, 60]
         R_doublePeak = 0.0203/0.0195  #intensity ratio for Am241 double peak
         
+    if returnMCpeakHist == True:
+        saved_peaks = []
+    
     for index, i in enumerate(peak_ranges):
+        if returnMCpeakHist == True and peaks[index] not in returnMCpeakHist_peaklist:
+            continue
 
         #prepare histogram
         print(str(peaks[index]), " keV")
@@ -200,9 +205,9 @@ def perform_gammaLineCounting(detector, source, spectra_type, data_path=None, ca
         bins_peak = np.append(bins_peak, bins_peak[-1]+binwidth)
 
         if returnMCpeakHist == True:
-            print("returning MC peak hist only")
-            return hist_peak, bins_peak, bins_centres_peak, peaks[index]
-            continue
+            if peaks[index] in returnMCpeakHist_peaklist:
+                saved_peaks.append([hist_peak, bins_peak, bins_centres_peak])
+                continue
 
         #fit function initial guess
         if peaks[index] == 81: #Ba double peak
@@ -356,6 +361,9 @@ def perform_gammaLineCounting(detector, source, spectra_type, data_path=None, ca
             if peaks[index] == 103:
                 C_99, C_99_err, C_103, C_103_err = C1, C1_err, C2, C2_err
     
+    if returnMCpeakHist == True:
+        print('returning requested MC peak hists only')
+        return saved_peaks
 
     #Compute count ratio
     if source == "Ba133":
@@ -400,14 +408,46 @@ def perform_gammaLineCounting(detector, source, spectra_type, data_path=None, ca
                     json.dump(PeakCounts, outfile, indent=4)
 
 
-def compareMCGammaLines(detector, source, sim_path=None, MC_id=None):
+def compareMCGammaLines(detector, source, MC_id, sim_folder_det):
+    """
+    For a given detector and source, plot key peaks for each FCCD to compare
+    Args:
+    - detector
+    - source: currently only Ba133
+    - MC_id: e.g. detector-source_data-MC_source_pos_hyphon
+    - sim_folder_det = sim_folder+detector/source_data/MC_source_pos_underscore/hdf5/AV_processed/
+    """
 
-    spectra_type="MC"
-    returnMCpeakHist=True
-    peak_list = [81, 356]
+    peak_list = [81,356]
 
+    FCCD_list = [0.0,0.25, 0.5, 0.75, 1.0, 1.25, 1.5, 3.0]
+    smear, TL_model, DLF, frac_FCCDbore = "g", "notl", 1.0, 0.5
 
+    fig81, ax81 = plt.subplots()
+    fig356, ax356 = plt.subplots()
 
+    for FCCD in FCCD_list:
+
+        MC_id_FCCD = MC_id+"_"+smear+"_"+TL_model+"_FCCD"+str(FCCD)+"mm_DLF"+str(DLF)+"_fracFCCDbore"+str(frac_FCCDbore)
+        sim_path=sim_folder_det+MC_id_FCCD+".hdf5"
+
+        saved_peaks_FCCD = perform_gammaLineCounting(detector, source, "MC", sim_path=sim_path, MC_id=MC_id_FCCD, returnMCpeakHist=True, returnMCpeakHist_peaklist=peak_list)
+        
+        ax81.hist(saved_peaks_FCCD[0][1][:-1], saved_peaks_FCCD[0][1], weights=saved_peaks_FCCD[0][0], histtype="step", linewidth=0.5, label="FCCD: "+str(FCCD)+" mm")
+        ax356.hist(saved_peaks_FCCD[1][1][:-1], saved_peaks_FCCD[1][1], weights=saved_peaks_FCCD[1][0], histtype="step", linewidth=0.5, label="FCCD: "+str(FCCD)+" mm")
+        
+
+    binwidth = 0.1
+    ax81.set_xlabel("Energy / keV")
+    ax356.set_xlabel("Energy / keV")
+    ax81.set_ylabel("Counts / "+str(binwidth)+" keV")
+    ax356.set_ylabel("Counts / "+str(binwidth)+" keV")
+    ax81.set_yscale("log")
+    ax356.set_yscale("log")
+    ax81.legend(fontsize=8)
+    ax356.legend(fontsize=8)
+
+    plt.show()
 
 
 
