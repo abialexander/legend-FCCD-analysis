@@ -14,9 +14,9 @@ def main():
     #====================================================
     # Plot FCCDs
     #====================================================
-    # order_list = [2,4,5,7,8,9]
-    # source_list = ["Ba133", "Am241_HS1"]
-    # plotResults(order_list, source_list, "FCCD")
+    order_list = [2,4,5,7,8,9]
+    source_list = ["Ba133", "Am241_HS1"]
+    plotResults(order_list, source_list, "FCCD")
 
     #====================================================
     # Make LaTeX Table Code

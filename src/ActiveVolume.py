@@ -38,7 +38,7 @@ def FCCDtoAV(order_list, metadata_folder):
             # Get FCCDs from combined json file
             #=============================================
             #Ba133:
-            allFCCDs_Ba133_json = CodePath+"/../FCCDvalues_Ba133.json"
+            allFCCDs_Ba133_json = CodePath+"/../resultsAll/FCCDvalues_Ba133.json"
             with open(allFCCDs_Ba133_json) as json_file:
                 data_ba = json.load(json_file)
             try:
@@ -58,7 +58,7 @@ def FCCDtoAV(order_list, metadata_folder):
             #     errPos_ba = 0.
             #     errNeg_ba = 0.
             #Am241:
-            allFCCDs_Am241_HS1_json = CodePath+"/../FCCDvalues_Am241_HS1.json"
+            allFCCDs_Am241_HS1_json = CodePath+"/../resultsAll/FCCDvalues_Am241_HS1.json"
             with open(allFCCDs_Am241_HS1_json) as json_file:
                 data_am = json.load(json_file)
             try:
@@ -182,7 +182,7 @@ def FCCDtoAV(order_list, metadata_folder):
                 }
                 FCCD_AV[detName][source] = results_source
 
-    AV_file = CodePath+"/../AVvalues.json"
+    AV_file = CodePath+"/../resultsAll/AVvalues.json"
     with open(AV_file, "w") as outfile:
         json.dump(FCCD_AV, outfile, indent=4)
 

@@ -103,7 +103,7 @@ def collateFCCDs(order_list, source, energy_filter="cuspEmax_ctc", cuts=True, sm
             dict_all[detector]=dict_det
     
 
-    with open(CodePath+"/../FCCDvalues_"+source+".json", "w") as outfile:
+    with open(CodePath+"/../resultsAll/FCCDvalues_"+source+".json", "w") as outfile:
         json.dump(dict_all, outfile, indent=4)
     
     return dict_all
@@ -137,9 +137,9 @@ def plotResults(order_list,source_list,results_type):
         for source in source_list:
 
             if results_type == "FCCD":
-                json_path = CodePath+"/../FCCDvalues_"+source+".json"
+                json_path = CodePath+"/../resultsAll/FCCDvalues_"+source+".json"
             else:
-                json_path = CodePath+"/../AVvalues.json"
+                json_path = CodePath+"/../resultsAll/AVvalues.json"
             with open(json_path) as json_file:
                 FCCDs_json = json.load(json_file)
             detectors = detector_list_data["order_"+str(order)]["detectors"]
@@ -203,97 +203,14 @@ def plotResults(order_list,source_list,results_type):
         ax.set_ylabel('FCCD (mm)', fontsize=11)
         ax.set_ylim(0.5,1.5)
         ax.set_title("FCCDs", fontsize=12)
-        plt.savefig(CodePath+"/../FCCDs.png", bbox_inches='tight') 
+        plt.savefig(CodePath+"/../resultsAll/FCCDs.png", bbox_inches='tight') 
     else:
         ax.set_ylabel('fAV', fontsize=11)
         # ax.set_ylim(0.,1.5)
         ax.set_title("fAV", fontsize=12)
-        plt.savefig(CodePath+"/../fAVs.png", bbox_inches='tight') 
+        plt.savefig(CodePath+"/../resultsAll/fAVs.png", bbox_inches='tight') 
 
     plt.show()
-
- 
-# def plotfAVs(order_list,source_list):
-#     """
-#     Plot all fAVs for a given order_list and source_list
-#     """
-
-#     CodePath=os.path.dirname(os.path.realpath(__file__))
-
-#     #Get detector list
-#     detector_list = CodePath+"/../detector_list.json"
-#     with open(detector_list) as json_file:
-#         detector_list_data = json.load(json_file)
-
-#     fig, ax = plt.subplots(figsize=(12,8))
-#     colors_orders = {2:'darkviolet', 4:'deepskyblue', 5:'orangered', 7:'green', 8:'gold', 9:'magenta'}
-#     markers_sources = {"Ba133": "o", "Am241_HS1":"^"} #abi plot
-
-#     detectors_all = []
-#     orders_all = []
-
-#     for order in order_list:
-
-#         for source in source_list:
-
-#             json_path = CodePath+"/../AVvalues.json"
-#             with open(json_path) as json_file:
-#                 AVs_json = json.load(json_file)
-#             detectors = detector_list_data["order_"+str(order)]["detectors"]
-
-#             fAVs_source = []
-#             fAV_err_ups_source = []
-#             fAV_err_lows_source = []
-
-#             detectors_source = []
-
-#             for detector in detectors:
-
-#                 if detector=="V07646A": #result needs checking
-#                     print("ignoring FCCD result for ",detector, " and source ", source)
-#                     continue
-
-#                 detectors_all.append(detector)
-#                 orders_all.append(order)
-
-#                 try:
-#                     fAV_source, fAV_err_up_source, fAV_err_low_source = fAVs_json[detector][source]["AV/Volume"]["Central"], fAVs_json[detector][source]["AV/Volume"]["ErrPos"], fAVs_json[detector][source]["AV/Volume"]["ErrNeg"]
-#                     fAVs_source.append(fAV_source)
-#                     fAV_err_ups_source.append(fAV_err_up_source)
-#                     fAV_err_lows_source.append(fAV_err_low_source)
-#                     detectors_source.append(detector)
-#                 except:
-#                     print("no fAV result with ",source," for ", detector)
-
-#             cc = colors_orders[order]
-#             if source == "Am241_HS1":
-#                 cc=lighten_color(cc,1.2)
-
-#             ax.errorbar(detectors_source,fAVs_source, yerr = [fAV_err_lows_source, fAV_err_ups_source], marker = markers_sources[source], color=cc, linestyle = '-')
-            
-#     for order in colors_orders:
-#         color = colors_orders[order]
-#         ax.plot(np.NaN, np.NaN, c=color, label=f'Order #'+str(order))
-
-#     ax2 = ax.twinx()
-#     for source in markers_sources:
-#         marker = markers_sources[source]
-#         if source in source_list:
-#             ax2.plot(np.NaN, np.NaN, marker=marker,c='grey',label=source)
-#     ax2.get_yaxis().set_visible(False)
-
-#     ax.legend(loc='upper left', bbox_to_anchor=(0, 1), fontsize=10)
-#     ax2.legend(loc='upper left', bbox_to_anchor=(0, 0.77), fontsize=10)
-
-#     ax.tick_params(axis='x', labelrotation=45)
-#     ax.set_xlabel('Detector', fontsize=11)
-#     ax.set_ylabel('FCCD (mm)', fontsize=11)
-#     ax.grid(linestyle='dashed', linewidth=0.5)
-#     plt.tight_layout()
-#     ax.set_ylim(0.5,1.5)
-#     ax.set_title("FCCDs", fontsize=12)
-#     plt.savefig(CodePath+"/../FCCDs.png", bbox_inches='tight') 
-#     plt.show()
 
 
 
