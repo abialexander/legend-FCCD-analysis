@@ -13,6 +13,9 @@ class Vividict(dict):
 def FCCDtoAV(order_list, metadata_folder):
     """
     Returns AVs from FCCD for Ba133 and Am241, for all detectors in listed orders
+    args:
+    - order_list: e.g. [2,4,5,7,8,9]
+    - metadata_folder: path to folder containing the metadata containing detector geometry files
     """
 
     CodePath=os.path.dirname(os.path.realpath(__file__))
@@ -43,7 +46,9 @@ def FCCDtoAV(order_list, metadata_folder):
                 errPos_ba = data_ba[detName]['unrounded']['FCCD_err_total_up']
                 errNeg_ba = data_ba[detName]['unrounded']['FCCD_err_total_low']
             except KeyError:
-                print("Setting FCCD to 0 for Ba133 and detector ",detName)
+                print("no FCCD  for Ba133 and detector ",detName)
+                # continue
+                # print("Setting FCCD to 0 for Ba133 and detector ",detName)
                 FCCD_ba = 0.
                 errPos_ba = 0.
                 errNeg_ba = 0.
@@ -61,6 +66,8 @@ def FCCDtoAV(order_list, metadata_folder):
                 errPos_am = data_am[detName]['unrounded']['FCCD_err_total_up']
                 errNeg_am = data_am[detName]['unrounded']['FCCD_err_total_low']
             except KeyError:
+                print("no FCCD  for Am241 and detector ",detName)
+                # continue
                 print("Setting FCCD to 0 for Am241 and detector ",detName)
                 FCCD_am = 0.
                 errPos_am = 0.

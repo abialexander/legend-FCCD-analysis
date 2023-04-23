@@ -16,7 +16,7 @@ def main():
     #====================================================
     # order_list = [2,4,5,7,8,9]
     # source_list = ["Ba133", "Am241_HS1"]
-    # plotFCCDs(order_list, source_list)
+    # plotResults(order_list, source_list, "FCCD")
 
     #====================================================
     # Make LaTeX Table Code
@@ -31,6 +31,13 @@ def main():
     order_list = [2,4,5,7,8,9]
     metadata_folder = "/lfs/l1/legend/detector_char/enr/hades/simulations/legend-g4simple-simulation/tools/legend-metadata/hardware/detectors/"
     FCCDtoAV(order_list, metadata_folder)
+
+    #====================================================
+    # Plot fAVs
+    #====================================================
+    order_list = [2,4,5,7,8,9]
+    source_list = ["Ba133", "Am241_HS1"]
+    plotResults(order_list, source_list, "fAV")
     
 
 if __name__ == "__main__":
