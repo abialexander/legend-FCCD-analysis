@@ -326,7 +326,7 @@ def makeLaTeXTable(order_list, source_list):
         fAV_str_Am_list.append(fAV_str_Am)
         
     table =tabulate({"Detector": detectors_all,"FCCD ($^{133}$Ba) / mm": FCCD_str_Ba_list,"FCCD ($^{241}$Am) / mm": FCCD_str_Am_list,"AV ($^{133}$Ba) / mm$^3$": AV_str_Ba_list,"AV ($^{241}$Am) / mm$^3$": AV_str_Am_list,"fAV ($^{133}$Ba)": fAV_str_Ba_list,"fAV ($^{241}$Am)": fAV_str_Am_list}, headers="keys", tablefmt="latex_raw")
-    with open(CodePath+"/../resultsAll/ResultsLaTeXTable.txt", "a") as f:
+    with open(CodePath+"/../resultsAll/ResultsLaTeXTable.txt", "w") as f:
         print(table, file=f)
 
 
