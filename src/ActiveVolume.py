@@ -47,16 +47,9 @@ def FCCDtoAV(order_list, metadata_folder):
                 errNeg_ba = data_ba[detName]['unrounded']['FCCD_err_total_low']
             except KeyError:
                 print("no FCCD  for Ba133 and detector ",detName)
-                # continue
-                # print("Setting FCCD to 0 for Ba133 and detector ",detName)
                 FCCD_ba = 0.
                 errPos_ba = 0.
                 errNeg_ba = 0.
-            # if detector == "V07646A":
-            #     print("Setting FCCD to 0 for Ba133 and detector ",detector)
-            #     FCCD_ba = 0.
-            #     errPos_ba = 0.
-            #     errNeg_ba = 0.
             #Am241:
             allFCCDs_Am241_HS1_json = CodePath+"/../resultsAll/FCCDvalues_Am241_HS1.json"
             with open(allFCCDs_Am241_HS1_json) as json_file:

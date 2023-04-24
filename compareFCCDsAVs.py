@@ -14,30 +14,30 @@ def main():
     #====================================================
     # Plot FCCDs
     #====================================================
-    order_list = [2,4,5,7,8,9]
-    source_list = ["Ba133", "Am241_HS1"]
-    plotResults(order_list, source_list, "FCCD")
+    # order_list = [2,4,5,7,8,9]
+    # source_list = ["Ba133", "Am241_HS1"]
+    # plotResults(order_list, source_list, "FCCD")
+
+    # #====================================================
+    # # Convert all FCCDs -> AVs
+    # #====================================================
+    # order_list = [2,4,5,7,8,9]
+    # metadata_folder = "/lfs/l1/legend/detector_char/enr/hades/simulations/legend-g4simple-simulation/tools/legend-metadata/hardware/detectors/"
+    # FCCDtoAV(order_list, metadata_folder)
+
+    # #====================================================
+    # # Plot fAVs
+    # #====================================================
+    # order_list = [2,4,5,7,8,9]
+    # source_list = ["Ba133", "Am241_HS1"]
+    # plotResults(order_list, source_list, "fAV")
 
     #====================================================
     # Make LaTeX Table Code
     #====================================================
-    # order_list = [2,4,5,7,8,9]
-    # source_list = ["Ba133", "Am241_HS1"]
-    # makeLaTeXTable(order_list, source_list)
-
-    #====================================================
-    # Convert all FCCDs -> AVs
-    #====================================================
-    order_list = [2,4,5,7,8,9]
-    metadata_folder = "/lfs/l1/legend/detector_char/enr/hades/simulations/legend-g4simple-simulation/tools/legend-metadata/hardware/detectors/"
-    FCCDtoAV(order_list, metadata_folder)
-
-    #====================================================
-    # Plot fAVs
-    #====================================================
     order_list = [2,4,5,7,8,9]
     source_list = ["Ba133", "Am241_HS1"]
-    plotResults(order_list, source_list, "fAV")
+    makeLaTeXTable(order_list, source_list)
     
 
 if __name__ == "__main__":

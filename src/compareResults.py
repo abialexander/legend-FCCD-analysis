@@ -4,6 +4,8 @@ import matplotlib.pyplot as plt
 import matplotlib.colors as mc
 import numpy as np
 import colorsys
+import pandas as pd
+from tabulate import tabulate
 
 class Vividict(dict):
     def __missing__(self, key):
@@ -214,13 +216,118 @@ def plotResults(order_list,source_list,results_type):
 
 
 
-# def makeLaTeXTable(order_list, source_list):
+def makeLaTeXTable(order_list, source_list):
 
-#     """
-#     Plot all FCCDs for a given order_list and source_list
-#     """
+    """
+    Make LaTeX Table from all results
+    """
+
+    CodePath=os.path.dirname(os.path.realpath(__file__))
+
+    #Get detector list
+    detector_list = CodePath+"/../detector_list.json"
+    with open(detector_list) as json_file:
+        detector_list_data = json.load(json_file)
+
+    #Get results
+    results_path = CodePath+"/../resultsAll/AVvalues.json"
+    with open(results_path) as json_file:
+        FCCDs_json = json.load(json_file)
 
 
+    detectors_all = []
+    # FCCD_Ba_all, FCCD_Ba_err_up_all, FCCD_Ba_err_low_all = [], [], []
+    # FCCD_Am_all, FCCD_Am_err_up_all, FCCD_Am_err_low_all = [], [], []
+    # AV_Ba_all, AV_Ba_err_up_all, AV_Ba_err_low_all = [], [], []
+    # AV_Am_all, AV_Am_err_up_all, AV_Am_err_low_all = [], [], []
+    # fAV_Ba_all, fAV_Ba_err_up_all, fAV_Ba_err_low_all = [], [], []
+    # fAV_Am_all, fAV_Am_err_up_all, fAV_Am_err_low_all = [], [], []
+
+    for source in source_list:
+
+        FCCD_source_all, FCCD_source_err_up_all, FCCD_source_err_low_all = [], [], []
+        AV_source_all, AV_source_err_up_all, AV_source_err_low_all = [], [], []
+        fAV_source_all, fAV_source_err_up_all, fAV_source_err_low_all = [], [], []
+
+        for order in order_list:
+        
+            detectors = detector_list_data["order_"+str(order)]["detectors"]
+
+            for detector in detectors:
+                
+                if source == "Ba133":
+                    detectors_all.append(detector)
+
+
+                try:
+                    if FCCDs_json[detector][source]["FCCD"]["Central"] == 0.0:
+                        print("no result for detector ", detector," and ", source)
+                        FCCD, FCCD_err_up, FCCD_err_low = np.nan, np.nan, np.nan
+                        AV, AV_err_up, AV_err_low = np.nan, np.nan, np.nan
+                        fAV, fAV_err_up, fAV_err_low = np.nan, np.nan, np.nan
+                    else:
+                        FCCD, FCCD_err_up, FCCD_err_low = round(FCCDs_json[detector][source]["FCCD"]["Central"],2), round(FCCDs_json[detector][source]["FCCD"]["ErrPos"],2), round(FCCDs_json[detector][source]["FCCD"]["ErrNeg"],2)
+                        AV, AV_err_up, AV_err_low = round(FCCDs_json[detector][source]["ActiveVolume"]["Central"],1), round(FCCDs_json[detector][source]["AV/Volume"]["ErrPos"],1), round(FCCDs_json[detector][source]["AV/Volume"]["ErrNeg"],1)
+                        fAV, fAV_err_up, fAV_err_low = round(FCCDs_json[detector][source]["AV/Volume"]["Central"],3), round(FCCDs_json[detector][source]["AV/Volume"]["ErrPos"],3), round(FCCDs_json[detector][source]["AV/Volume"]["ErrNeg"],3)
+                except KeyError:
+                    print("no result for detector ", detector," and ", source)
+                    FCCD, FCCD_err_up, FCCD_err_low = np.nan, np.nan, np.nan
+                    AV, AV_err_up, AV_err_low = np.nan, np.nan, np.nan
+                    fAV, fAV_err_up, fAV_err_low = np.nan, np.nan, np.nan
+                
+                FCCD_source_all.append(FCCD)
+                FCCD_source_err_up_all.append(FCCD_err_up)
+                FCCD_source_err_low_all.append(FCCD_err_low)
+                AV_source_all.append(AV)
+                AV_source_err_up_all.append(AV_err_up)
+                AV_source_err_low_all.append(AV_err_low)
+                fAV_source_all.append(fAV)
+                fAV_source_err_up_all.append(fAV_err_up)
+                fAV_source_err_low_all.append(fAV_err_low)
+    
+        if source == "Ba133":
+            FCCD_Ba_all, FCCD_Ba_err_up_all, FCCD_Ba_err_low_all = FCCD_source_all, FCCD_source_err_up_all, FCCD_source_err_low_all
+            AV_Ba_all, AV_Ba_err_up_all, AV_Ba_err_low_all = AV_source_all, AV_source_err_up_all, AV_source_err_low_all
+            fAV_Ba_all, fAV_Ba_err_up_all, fAV_Ba_err_low_all = fAV_source_all, fAV_source_err_up_all, fAV_source_err_low_all
+        else: 
+            FCCD_Am_all, FCCD_Am_err_up_all, FCCD_Am_err_low_all = FCCD_source_all, FCCD_source_err_up_all, FCCD_source_err_low_all
+            AV_Am_all, AV_Am_err_up_all, AV_Am_err_low_all = AV_source_all, AV_source_err_up_all, AV_source_err_low_all
+            fAV_Am_all, fAV_Am_err_up_all, fAV_Am_err_low_all = fAV_source_all, fAV_source_err_up_all, fAV_source_err_low_all
+
+    #make strings of values plus errors
+    FCCD_str_Ba_list, FCCD_str_Am_list = [], []
+    AV_str_Ba_list, AV_str_Am_list = [], []
+    fAV_str_Ba_list, fAV_str_Am_list = [], []
+
+    for ind, detector in enumerate(detectors_all):
+        #Ba results
+        if str(FCCD_Ba_all[ind]) == 'nan':
+            FCCD_str_Ba = r'-'
+            AV_str_Ba = r'-'
+            fAV_str_Ba = r'-'
+        else:
+            FCCD_str_Ba = str(FCCD_Ba_all[ind])+r'$^{+'+str(FCCD_Ba_err_up_all[ind])+r'}_{-'+str(FCCD_Ba_err_low_all[ind])+r'}$'
+            AV_str_Ba = str(AV_Ba_all[ind])+r'$^{+'+str(AV_Ba_err_up_all[ind])+r'}_{-'+str(AV_Ba_err_low_all[ind])+r'}$'
+            fAV_str_Ba = str(fAV_Ba_all[ind])+r'$^{+'+str(fAV_Ba_err_up_all[ind])+r'}_{-'+str(fAV_Ba_err_low_all[ind])+r'}$'
+        FCCD_str_Ba_list.append(FCCD_str_Ba)
+        AV_str_Ba_list.append(AV_str_Ba)
+        fAV_str_Ba_list.append(fAV_str_Ba)
+        #Am results
+        if str(FCCD_Am_all[ind]) == 'nan':
+            FCCD_str_Am = r'-'
+            AV_str_Am = r'-'
+            fAV_str_Am = r'-'
+        else:
+            FCCD_str_Am = str(FCCD_Am_all[ind])+r'$^{+'+str(FCCD_Am_err_up_all[ind])+r'}_{-'+str(FCCD_Am_err_low_all[ind])+r'}$'
+            AV_str_Am = str(AV_Am_all[ind])+r'$^{+'+str(AV_Am_err_up_all[ind])+r'}_{-'+str(AV_Am_err_low_all[ind])+r'}$'
+            fAV_str_Am = str(fAV_Am_all[ind])+r'$^{+'+str(fAV_Am_err_up_all[ind])+r'}_{-'+str(fAV_Am_err_low_all[ind])+r'}$'
+        FCCD_str_Am_list.append(FCCD_str_Am)
+        AV_str_Am_list.append(AV_str_Am)
+        fAV_str_Am_list.append(fAV_str_Am)
+        
+    table =tabulate({"Detector": detectors_all,"FCCD ($^{133}$Ba) / mm": FCCD_str_Ba_list,"FCCD ($^{241}$Am) / mm": FCCD_str_Am_list,"AV ($^{133}$Ba) / mm$^3$": AV_str_Ba_list,"AV ($^{241}$Am) / mm$^3$": AV_str_Am_list,"fAV ($^{133}$Ba)": fAV_str_Ba_list,"fAV ($^{241}$Am)": fAV_str_Am_list}, headers="keys", tablefmt="latex_raw")
+    with open(CodePath+"/../resultsAll/ResultsLaTeXTable.txt", "a") as f:
+        print(table, file=f)
 
 
 
