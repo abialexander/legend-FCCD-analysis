@@ -193,22 +193,23 @@ def plotResults(order_list,source_list,results_type):
         if source in source_list:
             ax2.plot(np.NaN, np.NaN, marker=marker,c='grey',label=source)
     ax2.get_yaxis().set_visible(False)
-
-    ax.legend(loc='upper left', bbox_to_anchor=(0, 1), fontsize=10)
-    ax2.legend(loc='upper left', bbox_to_anchor=(0, 0.77), fontsize=10)
     ax.tick_params(axis='x', labelrotation=45)
     ax.set_xlabel('Detector', fontsize=11)
     ax.grid(linestyle='dashed', linewidth=0.5)
     plt.tight_layout()
 
     if results_type == "FCCD":
+        ax.legend(loc='upper left', bbox_to_anchor=(0, 1), fontsize=10)
+        ax2.legend(loc='upper left', bbox_to_anchor=(0, 0.77), fontsize=10)
         ax.set_ylabel('FCCD (mm)', fontsize=11)
         ax.set_ylim(0.5,1.5)
         ax.set_title("FCCDs", fontsize=12)
         plt.savefig(CodePath+"/../resultsAll/FCCDs.png", bbox_inches='tight') 
     else:
+        ax.legend(loc='lower left', bbox_to_anchor=(0, 0.1), fontsize=10)
+        ax2.legend(loc='lower left', bbox_to_anchor=(0, 0), fontsize=10)
         ax.set_ylabel('fAV', fontsize=11)
-        # ax.set_ylim(0.,1.5)
+        ax.set_ylim(0.85,1.0)
         ax.set_title("fAV", fontsize=12)
         plt.savefig(CodePath+"/../resultsAll/fAVs.png", bbox_inches='tight') 
 
@@ -233,21 +234,17 @@ def makeLaTeXTable(order_list, source_list):
     results_path = CodePath+"/../resultsAll/AVvalues.json"
     with open(results_path) as json_file:
         FCCDs_json = json.load(json_file)
-
-
+        
     detectors_all = []
-    # FCCD_Ba_all, FCCD_Ba_err_up_all, FCCD_Ba_err_low_all = [], [], []
-    # FCCD_Am_all, FCCD_Am_err_up_all, FCCD_Am_err_low_all = [], [], []
-    # AV_Ba_all, AV_Ba_err_up_all, AV_Ba_err_low_all = [], [], []
-    # AV_Am_all, AV_Am_err_up_all, AV_Am_err_low_all = [], [], []
-    # fAV_Ba_all, fAV_Ba_err_up_all, fAV_Ba_err_low_all = [], [], []
-    # fAV_Am_all, fAV_Am_err_up_all, fAV_Am_err_low_all = [], [], []
 
     for source in source_list:
 
         FCCD_source_all, FCCD_source_err_up_all, FCCD_source_err_low_all = [], [], []
+        FCCD_source_correrr_up_all, FCCD_source_correrr_low_all, FCCD_source_uncorrerr_up_all, FCCD_source_uncorrerr_low_all = [], [], [], []
         AV_source_all, AV_source_err_up_all, AV_source_err_low_all = [], [], []
+        AV_source_correrr_up_all, AV_source_correrr_low_all, AV_source_uncorrerr_up_all, AV_source_uncorrerr_low_all = [], [], [], []
         fAV_source_all, fAV_source_err_up_all, fAV_source_err_low_all = [], [], []
+        fAV_source_correrr_up_all, fAV_source_correrr_low_all, fAV_source_uncorrerr_up_all, fAV_source_uncorrerr_low_all = [], [], [], []
 
         for order in order_list:
         
@@ -258,41 +255,75 @@ def makeLaTeXTable(order_list, source_list):
                 if source == "Ba133":
                     detectors_all.append(detector)
 
-
                 try:
                     if FCCDs_json[detector][source]["FCCD"]["Central"] == 0.0:
                         print("no result for detector ", detector," and ", source)
                         FCCD, FCCD_err_up, FCCD_err_low = np.nan, np.nan, np.nan
+                        FCCD_correrr_up, FCCD_correrr_low, FCCD_uncorrerr_up, FCCD_uncorrerr_low = np.nan, np.nan, np.nan, np.nan
                         AV, AV_err_up, AV_err_low = np.nan, np.nan, np.nan
+                        AV_correrr_up, AV_correrr_low, AV_uncorrerr_up, AV_uncorrerr_low = np.nan, np.nan, np.nan, np.nan
                         fAV, fAV_err_up, fAV_err_low = np.nan, np.nan, np.nan
+                        fAV_correrr_up, fAV_correrr_low, fAV_uncorrerr_up, fAV_uncorrerr_low = np.nan, np.nan, np.nan, np.nan
                     else:
                         FCCD, FCCD_err_up, FCCD_err_low = round(FCCDs_json[detector][source]["FCCD"]["Central"],2), round(FCCDs_json[detector][source]["FCCD"]["ErrPos"],2), round(FCCDs_json[detector][source]["FCCD"]["ErrNeg"],2)
-                        AV, AV_err_up, AV_err_low = round(FCCDs_json[detector][source]["ActiveVolume"]["Central"],1), round(FCCDs_json[detector][source]["AV/Volume"]["ErrPos"],1), round(FCCDs_json[detector][source]["AV/Volume"]["ErrNeg"],1)
+                        FCCD_correrr_up, FCCD_correrr_low, FCCD_uncorrerr_up, FCCD_uncorrerr_low = round(FCCDs_json[detector][source]["FCCD"]["ErrCorrPos"],2), round(FCCDs_json[detector][source]["FCCD"]["ErrCorrNeg"],2), round(FCCDs_json[detector][source]["FCCD"]["ErrUncorrPos"],2), round(FCCDs_json[detector][source]["FCCD"]["ErrUncorrNeg"],2)
+                        
+                        AV, AV_err_up, AV_err_low = round(FCCDs_json[detector][source]["ActiveVolume"]["Central"],1), round(FCCDs_json[detector][source]["ActiveVolume"]["ErrPos"],1), round(FCCDs_json[detector][source]["ActiveVolume"]["ErrNeg"],1)
+                        AV_correrr_up, AV_correrr_low, AV_uncorrerr_up, AV_uncorrerr_low = round(FCCDs_json[detector][source]["ActiveVolume"]["ErrCorrPos"],1), round(FCCDs_json[detector][source]["ActiveVolume"]["ErrCorrNeg"],1), round(FCCDs_json[detector][source]["ActiveVolume"]["ErrUncorrPos"],2), round(FCCDs_json[detector][source]["ActiveVolume"]["ErrUncorrNeg"],1)
+                        
                         fAV, fAV_err_up, fAV_err_low = round(FCCDs_json[detector][source]["AV/Volume"]["Central"],3), round(FCCDs_json[detector][source]["AV/Volume"]["ErrPos"],3), round(FCCDs_json[detector][source]["AV/Volume"]["ErrNeg"],3)
+                        fAV_correrr_up, fAV_correrr_low, fAV_uncorrerr_up, fAV_uncorrerr_low = round(FCCDs_json[detector][source]["AV/Volume"]["ErrCorrPos"],3), round(FCCDs_json[detector][source]["AV/Volume"]["ErrCorrNeg"],3), round(FCCDs_json[detector][source]["AV/Volume"]["ErrUncorrPos"],3), round(FCCDs_json[detector][source]["AV/Volume"]["ErrUncorrNeg"],3)
                 except KeyError:
                     print("no result for detector ", detector," and ", source)
                     FCCD, FCCD_err_up, FCCD_err_low = np.nan, np.nan, np.nan
+                    FCCD_correrr_up, FCCD_correrr_low, FCCD_uncorrerr_up, FCCD_uncorrerr_low = np.nan, np.nan, np.nan, np.nan
                     AV, AV_err_up, AV_err_low = np.nan, np.nan, np.nan
+                    AV_correrr_up, AV_correrr_low, AV_uncorrerr_up, AV_uncorrerr_low = np.nan, np.nan, np.nan, np.nan
                     fAV, fAV_err_up, fAV_err_low = np.nan, np.nan, np.nan
+                    fAV_correrr_up, fAV_correrr_low, fAV_uncorrerr_up, fAV_uncorrerr_low = np.nan, np.nan, np.nan, np.nan
                 
                 FCCD_source_all.append(FCCD)
                 FCCD_source_err_up_all.append(FCCD_err_up)
                 FCCD_source_err_low_all.append(FCCD_err_low)
+                FCCD_source_correrr_up_all.append(FCCD_correrr_up)
+                FCCD_source_correrr_low_all.append(FCCD_correrr_low)
+                FCCD_source_uncorrerr_up_all.append(FCCD_uncorrerr_up)
+                FCCD_source_uncorrerr_low_all.append(FCCD_uncorrerr_low)
+
                 AV_source_all.append(AV)
                 AV_source_err_up_all.append(AV_err_up)
                 AV_source_err_low_all.append(AV_err_low)
+                AV_source_correrr_up_all.append(AV_correrr_up)
+                AV_source_correrr_low_all.append(AV_correrr_low)
+                AV_source_uncorrerr_up_all.append(AV_uncorrerr_up)
+                AV_source_uncorrerr_low_all.append(AV_uncorrerr_low)
+
                 fAV_source_all.append(fAV)
                 fAV_source_err_up_all.append(fAV_err_up)
                 fAV_source_err_low_all.append(fAV_err_low)
+                fAV_source_correrr_up_all.append(fAV_correrr_up)
+                fAV_source_correrr_low_all.append(fAV_correrr_low)
+                fAV_source_uncorrerr_up_all.append(fAV_uncorrerr_up)
+                fAV_source_uncorrerr_low_all.append(fAV_uncorrerr_low)
     
         if source == "Ba133":
             FCCD_Ba_all, FCCD_Ba_err_up_all, FCCD_Ba_err_low_all = FCCD_source_all, FCCD_source_err_up_all, FCCD_source_err_low_all
+            FCCD_Ba_correrr_up_all, FCCD_Ba_correrr_low_all, FCCD_Ba_uncorrerr_up_all, FCCD_Ba_uncorrerr_low_all = FCCD_source_correrr_up_all, FCCD_source_correrr_low_all, FCCD_source_uncorrerr_up_all, FCCD_source_uncorrerr_low_all
+            
             AV_Ba_all, AV_Ba_err_up_all, AV_Ba_err_low_all = AV_source_all, AV_source_err_up_all, AV_source_err_low_all
+            AV_Ba_correrr_up_all, AV_Ba_correrr_low_all, AV_Ba_uncorrerr_up_all, AV_Ba_uncorrerr_low_all = AV_source_correrr_up_all, AV_source_correrr_low_all, AV_source_uncorrerr_up_all, AV_source_uncorrerr_low_all
+
             fAV_Ba_all, fAV_Ba_err_up_all, fAV_Ba_err_low_all = fAV_source_all, fAV_source_err_up_all, fAV_source_err_low_all
+            fAV_Ba_correrr_up_all, fAV_Ba_correrr_low_all, fAV_Ba_uncorrerr_up_all, fAV_Ba_uncorrerr_low_all = fAV_source_correrr_up_all, fAV_source_correrr_low_all, fAV_source_uncorrerr_up_all, fAV_source_uncorrerr_low_all
         else: 
             FCCD_Am_all, FCCD_Am_err_up_all, FCCD_Am_err_low_all = FCCD_source_all, FCCD_source_err_up_all, FCCD_source_err_low_all
+            FCCD_Am_correrr_up_all, FCCD_Am_correrr_low_all, FCCD_Am_uncorrerr_up_all, FCCD_Am_uncorrerr_low_all = FCCD_source_correrr_up_all, FCCD_source_correrr_low_all, FCCD_source_uncorrerr_up_all, FCCD_source_uncorrerr_low_all
+            
             AV_Am_all, AV_Am_err_up_all, AV_Am_err_low_all = AV_source_all, AV_source_err_up_all, AV_source_err_low_all
+            AV_Am_correrr_up_all, AV_Am_correrr_low_all, AV_Am_uncorrerr_up_all, AV_Am_uncorrerr_low_all = AV_source_correrr_up_all, AV_source_correrr_low_all, AV_source_uncorrerr_up_all, AV_source_uncorrerr_low_all
+            
             fAV_Am_all, fAV_Am_err_up_all, fAV_Am_err_low_all = fAV_source_all, fAV_source_err_up_all, fAV_source_err_low_all
+            fAV_Am_correrr_up_all, fAV_Am_correrr_low_all, fAV_Am_uncorrerr_up_all, fAV_Am_uncorrerr_low_all = fAV_source_correrr_up_all, fAV_source_correrr_low_all, fAV_source_uncorrerr_up_all, fAV_source_uncorrerr_low_all
 
     #make strings of values plus errors
     FCCD_str_Ba_list, FCCD_str_Am_list = [], []
@@ -306,9 +337,10 @@ def makeLaTeXTable(order_list, source_list):
             AV_str_Ba = r'-'
             fAV_str_Ba = r'-'
         else:
-            FCCD_str_Ba = str(FCCD_Ba_all[ind])+r'$^{+'+str(FCCD_Ba_err_up_all[ind])+r'}_{-'+str(FCCD_Ba_err_low_all[ind])+r'}$'
-            AV_str_Ba = str(AV_Ba_all[ind])+r'$^{+'+str(AV_Ba_err_up_all[ind])+r'}_{-'+str(AV_Ba_err_low_all[ind])+r'}$'
-            fAV_str_Ba = str(fAV_Ba_all[ind])+r'$^{+'+str(fAV_Ba_err_up_all[ind])+r'}_{-'+str(fAV_Ba_err_low_all[ind])+r'}$'
+            FCCD_str_Ba = str(FCCD_Ba_all[ind])+r'$^{+'+str(FCCD_Ba_correrr_up_all[ind])+r'+'+str(FCCD_Ba_uncorrerr_up_all[ind])+r'}_{-'+str(FCCD_Ba_correrr_low_all[ind])+r'-'+str(FCCD_Ba_uncorrerr_low_all[ind])+r'}$'
+            AV_str_Ba = str(AV_Ba_all[ind])+r'$^{+'+str(AV_Ba_correrr_up_all[ind])+r'+'+str(AV_Ba_uncorrerr_up_all[ind])+r'}_{-'+str(AV_Ba_correrr_low_all[ind])+r'-'+str(AV_Ba_uncorrerr_low_all[ind])+r'}$'
+            fAV_str_Ba = str(fAV_Ba_all[ind])+r'$^{+'+str(fAV_Ba_correrr_up_all[ind])+r'+'+str(fAV_Ba_uncorrerr_up_all[ind])+r'}_{-'+str(fAV_Ba_correrr_low_all[ind])+r'-'+str(fAV_Ba_uncorrerr_low_all[ind])+r'}$'
+            
         FCCD_str_Ba_list.append(FCCD_str_Ba)
         AV_str_Ba_list.append(AV_str_Ba)
         fAV_str_Ba_list.append(fAV_str_Ba)
@@ -318,9 +350,10 @@ def makeLaTeXTable(order_list, source_list):
             AV_str_Am = r'-'
             fAV_str_Am = r'-'
         else:
-            FCCD_str_Am = str(FCCD_Am_all[ind])+r'$^{+'+str(FCCD_Am_err_up_all[ind])+r'}_{-'+str(FCCD_Am_err_low_all[ind])+r'}$'
-            AV_str_Am = str(AV_Am_all[ind])+r'$^{+'+str(AV_Am_err_up_all[ind])+r'}_{-'+str(AV_Am_err_low_all[ind])+r'}$'
-            fAV_str_Am = str(fAV_Am_all[ind])+r'$^{+'+str(fAV_Am_err_up_all[ind])+r'}_{-'+str(fAV_Am_err_low_all[ind])+r'}$'
+            FCCD_str_Am = str(FCCD_Am_all[ind])+r'$^{+'+str(FCCD_Am_correrr_up_all[ind])+r'+'+str(FCCD_Am_uncorrerr_up_all[ind])+r'}_{-'+str(FCCD_Am_correrr_low_all[ind])+r'-'+str(FCCD_Am_uncorrerr_low_all[ind])+r'}$'
+            AV_str_Am = str(AV_Am_all[ind])+r'$^{+'+str(AV_Am_correrr_up_all[ind])+r'+'+str(AV_Am_uncorrerr_up_all[ind])+r'}_{-'+str(AV_Am_correrr_low_all[ind])+r'-'+str(AV_Am_uncorrerr_low_all[ind])+r'}$'
+            fAV_str_Am = str(fAV_Am_all[ind])+r'$^{+'+str(fAV_Am_correrr_up_all[ind])+r'+'+str(fAV_Am_uncorrerr_up_all[ind])+r'}_{-'+str(fAV_Am_correrr_low_all[ind])+r'-'+str(fAV_Am_uncorrerr_low_all[ind])+r'}$'
+        
         FCCD_str_Am_list.append(FCCD_str_Am)
         AV_str_Am_list.append(AV_str_Am)
         fAV_str_Am_list.append(fAV_str_Am)

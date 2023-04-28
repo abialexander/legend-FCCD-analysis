@@ -27,13 +27,8 @@ def FCCDtoAV(order_list, metadata_folder):
         data_detectorlist = json.load(json_file)
 
     for order in order_list:
-        # print(order)
         detectors = data_detectorlist["order_"+str(order)]["detectors"]
-        # print(detectors)
         for detName in detectors:
-            # print(detector)
-
-
             #=============================================
             # Get FCCDs from combined json file
             #=============================================
@@ -45,11 +40,20 @@ def FCCDtoAV(order_list, metadata_folder):
                 FCCD_ba = data_ba[detName]['unrounded']['FCCD']
                 errPos_ba = data_ba[detName]['unrounded']['FCCD_err_total_up']
                 errNeg_ba = data_ba[detName]['unrounded']['FCCD_err_total_low']
+                errCorrPos_ba = data_ba[detName]['unrounded']["FCCD_err_corr_up"]
+                errCorrNeg_ba = data_ba[detName]['unrounded']["FCCD_err_corr_low"]
+                errUncorrPos_ba = data_ba[detName]['unrounded']["FCCD_err_uncorr_up"]
+                errUncorrNeg_ba = data_ba[detName]['unrounded']["FCCD_err_uncorr_low"]
             except KeyError:
                 print("no FCCD  for Ba133 and detector ",detName)
+                print("Setting FCCD to 0 for Ba133 and detector ",detName)
                 FCCD_ba = 0.
                 errPos_ba = 0.
                 errNeg_ba = 0.
+                errCorrPos_ba = 0.
+                errCorrNeg_ba = 0.
+                errUncorrPos_ba = 0.
+                errUncorrNeg_ba = 0.
             #Am241:
             allFCCDs_Am241_HS1_json = CodePath+"/../resultsAll/FCCDvalues_Am241_HS1.json"
             with open(allFCCDs_Am241_HS1_json) as json_file:
@@ -58,14 +62,20 @@ def FCCDtoAV(order_list, metadata_folder):
                 FCCD_am = data_am[detName]['unrounded']['FCCD']
                 errPos_am = data_am[detName]['unrounded']['FCCD_err_total_up']
                 errNeg_am = data_am[detName]['unrounded']['FCCD_err_total_low']
+                errCorrPos_am = data_am[detName]['unrounded']["FCCD_err_corr_up"]
+                errCorrNeg_am = data_am[detName]['unrounded']["FCCD_err_corr_low"]
+                errUncorrPos_am = data_am[detName]['unrounded']["FCCD_err_uncorr_up"]
+                errUncorrNeg_am = data_am[detName]['unrounded']["FCCD_err_uncorr_low"]
             except KeyError:
                 print("no FCCD  for Am241 and detector ",detName)
-                # continue
                 print("Setting FCCD to 0 for Am241 and detector ",detName)
                 FCCD_am = 0.
                 errPos_am = 0.
                 errNeg_am = 0.
-
+                errCorrPos_am = 0.
+                errCorrNeg_am = 0.
+                errUncorrPos_am = 0.
+                errUncorrNeg_am = 0.
             #=============================================
             # Define detector geometry
             #=============================================
@@ -112,14 +122,14 @@ def FCCDtoAV(order_list, metadata_folder):
             h_t = bottom_cyl_trantisiton_height = geom["bottom_cyl"]["transition_in_mm"]
 
             h_cr = geom["crack"]["height_in_mm"]
-            r_cr = geom["crack"]["radius_in_mm"]
+            r_cr = geom["crack"]["radius_in_mm"] 
 
             #=============================================
             #create a detector object
             #=============================================
-            detector = Detector( detName,
-                                FCCD_am, errPos_am, errNeg_am,
-                                FCCD_ba, errPos_ba, errNeg_ba,
+            detector = Detector(detName,
+                                FCCD_am, errPos_am, errNeg_am, errCorrPos_am, errCorrNeg_am, errUncorrPos_am, errUncorrNeg_am,
+                                FCCD_ba, errPos_ba, errNeg_ba, errCorrPos_ba, errCorrNeg_ba, errUncorrPos_ba, errUncorrNeg_ba,
                                 H_c, R_c,
                                 h_w, r_w,
                                 h_g, r_g_o, r_g_i,
@@ -131,46 +141,67 @@ def FCCDtoAV(order_list, metadata_folder):
                                 h_cr, r_cr
                                 )
 
-            # if (FCCD_am!=0. and FCCD_ba!=0):
-            #     FCCD, FCCD_errPos, FCCD_errNeg = detector.FCCD_collection()
-            # else:
-            #     FCCD, FCCD_errPos, FCCD_errNeg = FCCD_ba, errPos_ba, errNeg_ba
-
             for source in ["Ba133", "Am241_HS1"]:
                 if source == "Ba133":
-                    FCCD, FCCD_errPos, FCCD_errNeg = FCCD_ba, errPos_ba, errNeg_ba
+                    FCCD, FCCD_errPos, FCCD_errNeg, FCCD_errCorrPos, FCCD_errCorrNeg, FCCD_errUncorrPos, FCCD_errUncorrNeg = FCCD_ba, errPos_ba, errNeg_ba, errCorrPos_ba, errCorrNeg_ba, errUncorrPos_ba, errUncorrNeg_ba
                 else:
-                    FCCD, FCCD_errPos, FCCD_errNeg = FCCD_am, errPos_am, errNeg_am
+                    FCCD, FCCD_errPos, FCCD_errNeg, FCCD_errCorrPos, FCCD_errCorrNeg, FCCD_errUncorrPos, FCCD_errUncorrNeg = FCCD_am, errPos_am, errNeg_am, errCorrPos_am, errCorrNeg_am, errUncorrPos_am, errUncorrNeg_am
                 
-                FCCD_bore = FCCD / 2.
+                
+                FCCD_bore = FCCD / 2.   #change with correct fraction from bore analysis
                 FCCD_bore_errPos = FCCD_errPos / 2.
                 FCCD_bore_errNeg = FCCD_errNeg / 2.
+                FCCD_bore_errCorrPos = FCCD_errCorrPos / 2.
+                FCCD_bore_errCorrNeg = FCCD_errCorrNeg / 2.
+                FCCD_bore_errUncorrPos = FCCD_errUncorrPos / 2.
+                FCCD_bore_errUncorrNeg = FCCD_errUncorrNeg / 2.
 
                 vol = detector.volume_comp()
 
                 av  = detector.active_volume_comp(FCCD, FCCD_bore)
                 av_errPos = detector.active_volume_comp(FCCD - FCCD_errNeg, FCCD_bore - FCCD_bore_errNeg) - av   # smaller DL bigger AV
                 av_errNeg  = av - detector.active_volume_comp(FCCD + FCCD_errPos, FCCD_bore + FCCD_bore_errPos)        # bigger DL smaller AV
+                av_errCorrPos = detector.active_volume_comp(FCCD - FCCD_errCorrNeg, FCCD_bore - FCCD_bore_errCorrNeg) - av   # smaller DL bigger AV
+                av_errCorrNeg  = av - detector.active_volume_comp(FCCD + FCCD_errCorrPos, FCCD_bore + FCCD_bore_errCorrPos)        # bigger DL smaller AV
+                av_errUncorrPos = detector.active_volume_comp(FCCD - FCCD_errUncorrNeg, FCCD_bore - FCCD_bore_errUncorrNeg) - av   # smaller DL bigger AV
+                av_errUncorrNeg  = av - detector.active_volume_comp(FCCD + FCCD_errUncorrPos, FCCD_bore + FCCD_bore_errUncorrPos)        # bigger DL smaller AV
 
                 ratio = detector.ratio(FCCD, FCCD_bore)
                 ratio_errNeg = ratio - detector.ratio(FCCD + FCCD_errPos, FCCD_bore + FCCD_bore_errPos)
                 ratio_errPos = detector.ratio(FCCD - FCCD_errNeg, FCCD_bore - FCCD_bore_errNeg) - ratio
+                ratio_errCorrNeg = ratio - detector.ratio(FCCD + FCCD_errCorrPos, FCCD_bore + FCCD_bore_errCorrPos)
+                ratio_errCorrPos= detector.ratio(FCCD - FCCD_errCorrNeg, FCCD_bore - FCCD_bore_errCorrNeg) - ratio
+                ratio_errUncorrNeg = ratio - detector.ratio(FCCD + FCCD_errUncorrPos, FCCD_bore + FCCD_bore_errUncorrPos)
+                ratio_errUncorrPos= detector.ratio(FCCD - FCCD_errUncorrNeg, FCCD_bore - FCCD_bore_errUncorrNeg) - ratio
+
 
                 results_source = {
                     "FCCD" : {
                         "Central": FCCD,
                         "ErrPos" : FCCD_errPos,
-                        "ErrNeg" : FCCD_errNeg
+                        "ErrNeg" : FCCD_errNeg,
+                        "ErrCorrPos" : FCCD_errCorrPos,
+                        "ErrCorrNeg" : FCCD_errCorrNeg,
+                        "ErrUncorrPos" : FCCD_errUncorrPos,
+                        "ErrUncorrNeg" : FCCD_errUncorrNeg
                         },
                     "ActiveVolume" : {
                         "Central": av,
                         "ErrPos" : av_errPos,
-                        "ErrNeg" : av_errNeg
+                        "ErrNeg" : av_errNeg,
+                        "ErrCorrPos" : av_errCorrPos,
+                        "ErrCorrNeg" : av_errCorrNeg,
+                        "ErrUncorrPos" : av_errUncorrPos,
+                        "ErrUncorrNeg" : av_errUncorrNeg
                         },
                     "AV/Volume" : {
                         "Central": av/vol,
                         "ErrPos" : ratio_errPos,
-                        "ErrNeg" : ratio_errNeg
+                        "ErrNeg" : ratio_errNeg,
+                        "ErrCorrPos" : ratio_errCorrPos,
+                        "ErrCorrNeg" : ratio_errCorrNeg,
+                        "ErrUncorrPos" : ratio_errUncorrPos,
+                        "ErrUncorrNeg" : ratio_errUncorrNeg
                     }
                 }
                 FCCD_AV[detName][source] = results_source
@@ -184,8 +215,8 @@ class Detector():
     "detector"
 
     def __init__(self, detName,
-                FCCD_am, errPos_am, errNeg_am,
-                FCCD_ba, errPos_ba, errNeg_ba,
+                FCCD_am, errPos_am, errNeg_am, errCorrPos_am, errCorrNeg_am, errUncorrPos_am, errUncorrNeg_am,
+                FCCD_ba, errPos_ba, errNeg_ba, errCorrPos_ba, errCorrNeg_ba, errUncorrPos_ba, errUncorrNeg_ba,
                 H_c, R_c,
                 h_w, r_w,
                 h_g, r_g_o, r_g_i,
@@ -200,9 +231,17 @@ class Detector():
         self.FCCD_am = FCCD_am
         self.errPos_am = errPos_am
         self.errNeg_am = errNeg_am
+        self.errCorrPos_am = errCorrPos_am
+        self.errCorrNeg_am = errCorrNeg_am
+        self.errUncorrPos_am = errUncorrPos_am
+        self.errUncorrNeg_am = errUncorrNeg_am
         self.FCCD_ba = FCCD_ba
         self.errPos_ba = errPos_ba
         self.errNeg_ba = errNeg_ba
+        self.errCorrPos_ba = errCorrPos_ba
+        self.errCorrNeg_ba = errCorrNeg_ba
+        self.errUncorrPos_ba = errUncorrPos_ba
+        self.errUncorrNeg_ba = errUncorrNeg_ba
         self.H_c = H_c
         self.R_c = R_c
         self.h_w = h_w
@@ -224,7 +263,8 @@ class Detector():
         self.h_cr = h_cr
         self.r_cr = r_cr
 
-    #FCCD parameters
+
+    #FCCD paramenters
     def FCCD_collection(self):
         FCCD_sigma_am = (self.errPos_am + self.errNeg_am) / 2.
         FCCD_sigma_ba = (self.errPos_ba + self.errNeg_ba) / 2.
@@ -289,16 +329,21 @@ class Detector():
 
     # crack volume
     def crack_volume(self):
-        phi_cr = math.acos((self.R_c-self.r_cr)/self.R_c)
-        vol = self.h_cr * self.r_cr*self.r_cr * (3*math.sin(phi_cr) - 3 * phi_cr* math.cos(phi_cr) - math.sin(phi_cr)*math.sin(phi_cr)) / (3 *(1-math.cos(phi_cr)))
+        alpha = (self.R_c-self.r_cr)
+        beta = alpha/self.R_c
+        gamma = self.h_cr/self.r_cr
+        vol = 2*self.R_c*self.R_c * gamma * (1/2*alpha*beta-1/4*alpha*math.sin(2*beta)-self.R_c/3*(math.sin(beta))**3)
         return vol
     @staticmethod
     def S_crack_volume(h, r, R):
-        phi = math.acos((R-r)/R)
-        vol = h * r*r * (3*math.sin(phi) - 3 * phi* math.cos(phi) - math.sin(phi)*math.sin(phi)) / (3*(1-math.cos(phi)))
+        alpha = (R-r)
+        beta = alpha/R
+        gamma = h/r
+        vol = 2*R*R * gamma * (1/2*alpha*beta-1/4*alpha*math.sin(2*beta)-R/3*(math.sin(beta))**3)
         return vol
 
-    #taper botttom outer volume
+
+    #taper bottom outer volume
     def taper_bottom_outer_volume(self):
         vol = self.cut_cone_volume()
         return vol
@@ -362,7 +407,6 @@ class Detector():
         vol = Detector.S_crack_volume(h, r, R)
         return vol
 
-
     #no bullatization situation
 
     def volume_comp(self):
@@ -371,7 +415,7 @@ class Detector():
         #taper_bottom_outer
         if any(value!=0 for value in [self.h_o]):
             volume -= Detector.S_cylinder_volume(self.h_o, self.R_c)   #cut the bottom side of the cylinder
-            volume += self.taper_bottom_outer_volume()   #add the taper bottom side of the cylinder
+            volume += Detector.S_taper_bottom_outer_volume(self.h_o, self.r_o, self.R_c)   #add the taper bottom side of the cylinder
 
         #taper_top_outer
         if any(value!=0 for value in [self.h_u]):
@@ -392,6 +436,7 @@ class Detector():
             volume -= Detector.S_cylinder_volume(self.h_b + self.h_t, self.R_c)
             volume += self.multiradius_volume()
 
+        #crack
         if any(value!=0 for value in [self.h_cr, self.r_cr]):
             volume -= self.bottom_crack_volume()
 
@@ -442,7 +487,7 @@ class Detector():
         s = tth*(1/math.sin(th) - 1) * FCCD
         return r - FCCD + s
 
-    #taper_top_outer
+    #taper_bottom_outer
     def active_volume_taper_bottom_outer(self, FCCD):
         h_o_new = Detector.S_corner_height_shift(self.h_o, self.r_o, self.R_c, FCCD)
         r_o_new = Detector.S_corner_radius_shift(self.h_o, self.r_o, self.R_c, FCCD)
@@ -471,7 +516,6 @@ class Detector():
             vol = Detector.S_taper_top_inner_volume(h_i_new, r_i_new, h_i_new, r_w_new)
         return vol
 
-
     #topgroove
     def active_volume_topgroove(self, FCCD, FCCD_bore):
         vol = Detector.S_topgroove_volume(self.h_topg, self.r_topg + FCCD, self.r_w + FCCD_bore)
@@ -482,12 +526,13 @@ class Detector():
         h_b_new = Detector.S_corner_height_shift(self.h_t, self.r_b, self.R_c, FCCD)
         vol = Detector.S_multiradius_volume(h_b_new, self.h_t, self.r_b - FCCD, self.R_c - FCCD)
         return vol
-
+    #crack
     def active_volume_bottom_crack(self, FCCD):
         h_cr_new = Detector.S_corner_height_shift(self.h_cr, self.r_cr, self.R_c, FCCD)
         r_cr_new = Detector.S_crack_corner_radius_shift(self.h_cr, self.r_cr, self.R_c, FCCD)
         vol = Detector.S_bottom_crack_volume(h_cr_new, r_cr_new, self.R_c - FCCD)
         return vol
+
 
 
     def active_volume_comp(self, FCCD, FCCD_bore):
@@ -520,7 +565,7 @@ class Detector():
             h_b_new = Detector.S_corner_height_shift(self.h_t, self.r_b, self.R_c, FCCD)
             active_volume -= Detector.S_cylinder_volume(h_b_new + self.h_t, self.R_c - FCCD)
             active_volume += self.active_volume_multiradius(FCCD)
-
+        #crack
         if any(value!=0 for value in [self.h_cr, self.r_cr]):
             active_volume -= self.active_volume_bottom_crack(FCCD)
 
@@ -532,3 +577,4 @@ class Detector():
     def ratio(self,FCCD, FCCD_bore):
         ratio = self.active_volume_comp(FCCD, FCCD_bore) / self.volume_comp()
         return ratio
+
