@@ -76,7 +76,7 @@ def scipy_LS_fit(x,y,fit_func,guess,bounds=None, yerr=None):
     return coeff, coeff_err
 
     
-def calculateFCCD(detector, source, MC_id, smear, TL_model, frac_FCCDbore, energy_filter, cuts, run):
+def calculateFCCD(detector, source, MC_id, smear, TL_model, frac_FCCDbore, energy_filter, cuts, run, plot_all_error_bands = False):
     """
     Calculate FCCD of data
     args: 
@@ -89,6 +89,7 @@ def calculateFCCD(detector, source, MC_id, smear, TL_model, frac_FCCDbore, energ
         - energy_filter (cuspE_ctc)
         - cuts (True/False)
         - run (1,2,etc)
+        - plot_all_error_bands = True if you want a plot highlighting all the decomposed errors and how they propagate
     """
 
     #initialise directories for detectors to save 
@@ -195,7 +196,7 @@ def calculateFCCD(detector, source, MC_id, smear, TL_model, frac_FCCDbore, energ
     p_guess_up = [max(y_uplim), 1, min(y_uplim)]
     coeff_up, coeff_up_err = scipy_LS_fit(xdata,y_uplim,exponential_decay,p_guess_up)
     yfit_up = exponential_decay(xfit,*coeff_up)
-    plt.plot(xfit, yfit_up, color=plot_colors["MC_err_total"], linestyle='dashed', linewidth=linewidth_main, label="MC err (stat/corr + syst/uncorr)")
+    plt.plot(xfit, yfit_up, color=plot_colors["MC_err_total"], linestyle='dashed', linewidth=linewidth_main, label="MC total err (stat/uncorr + syst/corr)")
     y_lowlim = ydata-yerr
     p_guess_low = [max(y_lowlim), 1, min(y_lowlim)]
     coeff_low, coeff_low_err = scipy_LS_fit(xdata,y_lowlim,exponential_decay,p_guess_low)
@@ -210,11 +211,14 @@ def calculateFCCD(detector, source, MC_id, smear, TL_model, frac_FCCDbore, energ
     y_uplim_corr = ydata+yerr_corr
     coeff_up_corr, coeff_up_corr_err = scipy_LS_fit(xdata,y_uplim_corr,exponential_decay,p_guess_up)
     yfit_up_corr = exponential_decay(xfit,*coeff_up_corr)
-    # plt.plot(xfit, yfit_up_corr, color=plot_colors["MC_err_corr"], linestyle='dashed', linewidth=1, label="MC stat")
+    if plot_all_error_bands == True:
+        plt.plot(xfit, yfit_up_corr, color=plot_colors["FCCD_err_MCsyst"], linestyle='dashed', linewidth=1, label="MC stat/uncorr err")
+    
     y_lowlim_corr = ydata-yerr_corr
     coeff_low_corr, coeff_low_corr_err = scipy_LS_fit(xdata,y_lowlim_corr,exponential_decay,p_guess_low)
     yfit_low_corr = exponential_decay(xfit,*coeff_low_corr)
-    # plt.plot(xfit, yfit_low_corr, color=plot_colors["MC_err_corr"],linestyle='dashed', linewidth=1)
+    if plot_all_error_bands == True:
+        plt.plot(xfit, yfit_low_corr, color=plot_colors["FCCD_err_MCsyst"],linestyle='dashed', linewidth=1)
     a_up_corr, b_up_corr, c_up_corr = coeff_up_corr[0], coeff_up_corr[1], coeff_up_corr[2]
     a_low_corr, b_low_corr, c_low_corr = coeff_low_corr[0], coeff_low_corr[1], coeff_low_corr[2] 
 
@@ -224,11 +228,13 @@ def calculateFCCD(detector, source, MC_id, smear, TL_model, frac_FCCDbore, energ
     y_uplim_uncorr = ydata+yerr_uncorr
     coeff_up_uncorr, coeff_up_uncorr_err = scipy_LS_fit(xdata,y_uplim_uncorr,exponential_decay,p_guess_up)
     yfit_up_uncorr = exponential_decay(xfit,*coeff_up_uncorr)
-    # plt.plot(xfit, yfit_up_uncorr, color=plot_colors["MC_err_uncorr"], linestyle='dashed', linewidth=1, label="MC uncorr")
+    if plot_all_error_bands == True:
+        plt.plot(xfit, yfit_up_uncorr, color=plot_colors["FCCD_err_statMCstatdata"], linestyle='dashed', linewidth=1, label="MC syst/uncorr err")
     y_lowlim_uncorr = ydata-yerr_uncorr
     coeff_low_uncorr, coeff_low_uncorr_err = scipy_LS_fit(xdata,y_lowlim_uncorr,exponential_decay,p_guess_low)
     yfit_low_uncorr = exponential_decay(xfit,*coeff_low_uncorr)
-    # plt.plot(xfit, yfit_low_uncorr, color=plot_colors["MC_err_uncorr"],linestyle='dashed', linewidth=1)
+    if plot_all_error_bands == True:
+        plt.plot(xfit, yfit_low_uncorr, color=plot_colors["FCCD_err_statMCstatdata"],linestyle='dashed', linewidth=1)
     a_up_uncorr, b_up_uncorr, c_up_uncorr = coeff_up_uncorr[0], coeff_up_uncorr[1], coeff_up_uncorr[2]
     a_low_uncorr, b_low_uncorr, c_low_uncorr = coeff_low_uncorr[0], coeff_low_uncorr[1], coeff_low_uncorr[2] 
 
@@ -268,15 +274,12 @@ def calculateFCCD(detector, source, MC_id, smear, TL_model, frac_FCCDbore, energ
 
     #=============Complete Plot===================
 
-    #TO DO
-    # props = dict(boxstyle='round', alpha=0.5)
     info_str = '\n'.join((r'$\chi^2/dof=%.2f/%.0f$'%(chi_sq, dof), r'FCCD=$%.3f^{+%.2f}_{-%.2f}$ mm' % (FCCD_data, FCCD_err_total_up, FCCD_err_total_low)))
     plt.text(0.02, 0.98, info_str, transform=ax.transAxes, fontsize=8.5,verticalalignment='top')
 
 
-
     #plot horizontal data line and errors
-    plt.hlines(countRatio_data+countRatio_data_err, 0, FCCD_list[-1], color=plot_colors["data_err_stat"], label = 'Data err (stat/uncorr', linewidth=linewidth_err, linestyle = 'dashed')
+    plt.hlines(countRatio_data+countRatio_data_err, 0, FCCD_list[-1], color=plot_colors["data_err_stat"], label = 'Data total err (stat/uncorr)', linewidth=linewidth_err, linestyle = 'dashed')
     plt.hlines(countRatio_data-countRatio_data_err, 0, FCCD_list[-1], color=plot_colors["data_err_stat"], linewidth=linewidth_err, linestyle = 'dashed')
     plt.hlines(countRatio_data, 0, FCCD_list[-1], color=plot_colors["data"], label = 'Data', linewidth=linewidth_main)
     
@@ -293,7 +296,7 @@ def calculateFCCD(detector, source, MC_id, smear, TL_model, frac_FCCDbore, energ
 
     # #plot stat MC + stat data/ total uncorr:
     plt.vlines(FCCD_data+FCCD_err_uncorr_up, 0, countRatio_data-countRatio_data_err, color=plot_colors["FCCD_err_statMCstatdata"], linestyles='dashed', linewidths=linewidth_err, label = "FCCD uncorr err")
-    plt.vlines(FCCD_data-FCCD_err_uncorr_low, 0, countRatio_data-countRatio_data_err, color=plot_colors["FCCD_err_statMCstatdata"], linestyles='dashed', linewidths=linewidth_err)
+    plt.vlines(FCCD_data-FCCD_err_uncorr_low, 0, countRatio_data+countRatio_data_err, color=plot_colors["FCCD_err_statMCstatdata"], linestyles='dashed', linewidths=linewidth_err)
 
     if source == "Ba133":
         plt.ylabel(r'$O_{Ba133} = (C_{79.6keV}+C_{81keV})/C_{356keV}$')
@@ -309,7 +312,7 @@ def calculateFCCD(detector, source, MC_id, smear, TL_model, frac_FCCDbore, energ
     else:
         plt.savefig(outputFolder+"FCCD_"+MC_id+"_"+smear+"_"+TL_model+"_fracFCCDbore"+str(frac_FCCDbore)+"_"+energy_filter+"_run"+str(run)+"_cuts.png")
 
-    # plt.show()
+    plt.show()
 
     # Save interpolated fccd for data to a json file
 

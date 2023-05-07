@@ -28,14 +28,14 @@ def main():
     Calibrate_Data = False  #Pre-reqs: needs dsp pygama data
     Gamma_line_count_data = False #Pre-reqs: needs calibration
     Gamma_line_count_MC = False #Pre-reqs: needs AV post processed MC for range of FCCDs
-    Calculate_FCCD = False #Pre-reqs: needs gammaline counts for data and MC
+    Calculate_FCCD = True #Pre-reqs: needs gammaline counts for data and MC
     Gamma_line_count_MC_bestfitFCCD = False #Pre-reqs: needs AV postprocessed MC for best fit FCCD
     PlotSpectra = False #Pre-reqs: needs all above stages
 
     #Optional Scripts
     PlotSpectra_nosmear = False
     PlotMCHits = False
-    PlotComparisonMCGammaLine = True
+    PlotComparisonMCGammaLine = False
     #====================================================
 
     if source == "Ba133":
@@ -126,7 +126,8 @@ def main():
                 smear="g"
                 TL_model="notl"
                 frac_FCCDbore=0.5
-                calculateFCCD(detector, source, MC_id, smear, TL_model, frac_FCCDbore, energy_filter, cuts, run)
+                plot_all_error_bands = False #only set to true for testing
+                calculateFCCD(detector, source, MC_id, smear, TL_model, frac_FCCDbore, energy_filter, cuts, run, plot_all_error_bands=plot_all_error_bands)
 
             #========Gamma line count -best fit MC==========
             if Gamma_line_count_MC_bestfitFCCD == True:
