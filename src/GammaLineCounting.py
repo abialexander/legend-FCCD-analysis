@@ -173,7 +173,10 @@ def perform_gammaLineCounting(detector, source, spectra_type, data_path=None, ca
         peaks = [81, 356, 161, 223, 276, 303, 383]
         R_doublePeak = 2.65/32.9 #intensity ratio for Ba-133 double peak
     if source == "Am241_HS1" or source == "Am241_HS6":
-        peak_ranges = [[95, 107],[56,63]] #Rough by eye
+        if spectra_type == "MC":
+            peak_ranges = [[95, 107],[56,63]]
+        else:
+            peak_ranges = [[94.5, 106.5],[56,63]]
         peaks = [103, 60]
         R_doublePeak = 0.0203/0.0195  #intensity ratio for Am241 double peak
         
@@ -227,7 +230,7 @@ def perform_gammaLineCounting(detector, source, spectra_type, data_path=None, ca
             mu99_guess, sigma99_guess, bkg99_guess, s99_guess = 99, 0.5, min(hist_peak), min(hist_peak)
             mu103_guess, sigma103_guess, bkg103_guess, s103_guess =  103, 0.5, min(hist_peak), min(hist_peak)
             a_guess = max(hist_peak)
-            a3_guess, mu3_guess, sigma3_guess = 0.1*max(hist_peak), 101, 0.5
+            a3_guess, mu3_guess, sigma3_guess = 0.1*max(hist_peak), 100, 0.25
             fitting_func_guess = [a_guess, mu99_guess, sigma99_guess, bkg99_guess, s99_guess, mu103_guess, sigma103_guess, a3_guess, mu3_guess, sigma3_guess, bkg103_guess, s103_guess]
             bounds=[(0,np.inf), (0,np.inf), (0,np.inf), (0,np.inf), (0,np.inf), (0,np.inf), (0,np.inf), (0,np.inf), (0,np.inf), (0,np.inf),(0,np.inf), (0,np.inf)]
         elif peaks[index] == 60: #Am gauss + step + tail
@@ -252,7 +255,7 @@ def perform_gammaLineCounting(detector, source, spectra_type, data_path=None, ca
         chi_sq = m.fval
         dof =  len(bins_centres_peak) - m.nfit
 
-        if (chi_sq/dof > 50 or m.valid == False)and source =="Ba133": #repeat fit with no bounds if bad
+        if (chi_sq/dof > 50 or m.valid == False): #and source =="Ba133": #repeat fit with no bounds if bad
             print("refitting...")
             m = Minuit(least_squares, *fitting_func_guess)
             if detector != "V05266B": #problematic fitting for these detectors

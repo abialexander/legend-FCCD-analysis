@@ -32,12 +32,18 @@ def main():
     # source_list = ["Ba133", "Am241_HS1"]
     # plotResults(order_list, source_list, "fAV")
 
+    # #====================================================
+    # # Make LaTeX Table Code
+    # #====================================================
+    # order_list = [2,4,5,7,8,9]
+    # source_list = ["Ba133", "Am241_HS1"]
+    # makeLaTeXTable(order_list, source_list)
+
     #====================================================
-    # Make LaTeX Table Code
+    # Calculate FCCD shift
     #====================================================
     order_list = [2,4,5,7,8,9]
-    source_list = ["Ba133", "Am241_HS1"]
-    makeLaTeXTable(order_list, source_list)
+    calculateFCCDshift(order_list)
     
 
 if __name__ == "__main__":

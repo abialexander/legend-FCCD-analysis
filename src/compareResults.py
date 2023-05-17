@@ -111,6 +111,8 @@ def collateFCCDs(order_list, source, energy_filter="cuspEmax_ctc", cuts=True, sm
     return dict_all
 
 
+
+
 def plotResults(order_list,source_list,results_type):
     """
     Plot all results for a given order_list and source_list
@@ -361,6 +363,100 @@ def makeLaTeXTable(order_list, source_list):
     table =tabulate({"Detector": detectors_all,"FCCD ($^{133}$Ba) / mm": FCCD_str_Ba_list,"FCCD ($^{241}$Am) / mm": FCCD_str_Am_list,"AV ($^{133}$Ba) / mm$^3$": AV_str_Ba_list,"AV ($^{241}$Am) / mm$^3$": AV_str_Am_list,"fAV ($^{133}$Ba)": fAV_str_Ba_list,"fAV ($^{241}$Am)": fAV_str_Am_list}, headers="keys", tablefmt="latex_raw")
     with open(CodePath+"/../resultsAll/ResultsLaTeXTable.txt", "w") as f:
         print(table, file=f)
+
+
+def calculateFCCDshift(order_list):
+    """
+    Calculate mean shift between sources across all detectors for a given order_list
+    args:
+    - order_list
+    """
+    CodePath=os.path.dirname(os.path.realpath(__file__))
+
+    #Get detector list
+    detector_list = CodePath+"/../detector_list.json"
+    with open(detector_list) as json_file:
+        detector_list_data = json.load(json_file)
+    
+    #Get results
+    results_path = CodePath+"/../resultsAll/AVvalues.json"
+    with open(results_path) as json_file:
+        FCCDs_json = json.load(json_file)
+    
+
+    detectors_all = []
+
+    source_list = ["Ba133", "Am241_HS1"]
+    for source in source_list:
+
+        FCCD_source_all, FCCD_source_err_up_all, FCCD_source_err_low_all = [], [], []
+        FCCD_source_correrr_up_all, FCCD_source_correrr_low_all, FCCD_source_uncorrerr_up_all, FCCD_source_uncorrerr_low_all = [], [], [], []
+
+        for order in order_list:
+        
+            detectors = detector_list_data["order_"+str(order)]["detectors"]
+
+            for detector in detectors:
+                
+                if source == "Ba133":
+                    detectors_all.append(detector)
+
+                try:
+                    if FCCDs_json[detector][source]["FCCD"]["Central"] == 0.0:
+                        print("no result for detector ", detector," and ", source)
+                        FCCD, FCCD_err_up, FCCD_err_low = np.nan, np.nan, np.nan
+                        FCCD_correrr_up, FCCD_correrr_low, FCCD_uncorrerr_up, FCCD_uncorrerr_low = np.nan, np.nan, np.nan, np.nan
+                    else:
+                        FCCD, FCCD_err_up, FCCD_err_low = round(FCCDs_json[detector][source]["FCCD"]["Central"],2), round(FCCDs_json[detector][source]["FCCD"]["ErrPos"],2), round(FCCDs_json[detector][source]["FCCD"]["ErrNeg"],2)
+                        FCCD_correrr_up, FCCD_correrr_low, FCCD_uncorrerr_up, FCCD_uncorrerr_low = round(FCCDs_json[detector][source]["FCCD"]["ErrCorrPos"],2), round(FCCDs_json[detector][source]["FCCD"]["ErrCorrNeg"],2), round(FCCDs_json[detector][source]["FCCD"]["ErrUncorrPos"],2), round(FCCDs_json[detector][source]["FCCD"]["ErrUncorrNeg"],2)
+                except KeyError:
+                    print("no result for detector ", detector," and ", source)
+                    FCCD, FCCD_err_up, FCCD_err_low = np.nan, np.nan, np.nan
+                    FCCD_correrr_up, FCCD_correrr_low, FCCD_uncorrerr_up, FCCD_uncorrerr_low = np.nan, np.nan, np.nan, np.nan
+
+                FCCD_source_all.append(FCCD)
+                FCCD_source_err_up_all.append(FCCD_err_up)
+                FCCD_source_err_low_all.append(FCCD_err_low)
+                FCCD_source_correrr_up_all.append(FCCD_correrr_up)
+                FCCD_source_correrr_low_all.append(FCCD_correrr_low)
+                FCCD_source_uncorrerr_up_all.append(FCCD_uncorrerr_up)
+                FCCD_source_uncorrerr_low_all.append(FCCD_uncorrerr_low)
+
+
+    
+        if source == "Ba133":
+            FCCD_Ba_all, FCCD_Ba_err_up_all, FCCD_Ba_err_low_all = FCCD_source_all, FCCD_source_err_up_all, FCCD_source_err_low_all
+            FCCD_Ba_correrr_up_all, FCCD_Ba_correrr_low_all, FCCD_Ba_uncorrerr_up_all, FCCD_Ba_uncorrerr_low_all = FCCD_source_correrr_up_all, FCCD_source_correrr_low_all, FCCD_source_uncorrerr_up_all, FCCD_source_uncorrerr_low_all
+        else: 
+            FCCD_Am_all, FCCD_Am_err_up_all, FCCD_Am_err_low_all = FCCD_source_all, FCCD_source_err_up_all, FCCD_source_err_low_all
+            FCCD_Am_correrr_up_all, FCCD_Am_correrr_low_all, FCCD_Am_uncorrerr_up_all, FCCD_Am_uncorrerr_low_all = FCCD_source_correrr_up_all, FCCD_source_correrr_low_all, FCCD_source_uncorrerr_up_all, FCCD_source_uncorrerr_low_all
+    
+    abs_shift_pct_list = []
+    for i, detector in enumerate(detectors_all):
+        if not np.isnan(FCCD_Ba_all[i]) and not np.isnan(FCCD_Am_all[i]):
+            abs_shift_pct = np.abs(FCCD_Am_all[i] - FCCD_Ba_all[i])/FCCD_Ba_all[i]
+            abs_shift_pct_list.append(abs_shift_pct)
+    
+    av_abs_shift_pct = np.mean(abs_shift_pct_list)
+    print(av_abs_shift_pct)
+
+    fig, ax = plt.subplots(figsize=(7,6))
+    plt.gca().set_aspect('equal')
+    plt.errorbar(FCCD_Am_all, FCCD_Ba_all, xerr = (FCCD_Am_err_low_all, FCCD_Am_err_up_all), yerr = (FCCD_Ba_err_low_all, FCCD_Ba_err_up_all), fmt='o', linewidth=1.5, ms=1, label="Total Error")
+    plt.errorbar(FCCD_Am_all, FCCD_Ba_all, xerr = (FCCD_Am_correrr_low_all, FCCD_Am_correrr_up_all), yerr = (FCCD_Ba_correrr_low_all, FCCD_Ba_correrr_up_all), fmt='o', linewidth=1.5, ms=1, label="Correlated Error")
+    plt.errorbar(FCCD_Am_all, FCCD_Ba_all, xerr = (FCCD_Am_uncorrerr_low_all, FCCD_Am_uncorrerr_up_all), yerr = (FCCD_Ba_uncorrerr_low_all, FCCD_Ba_uncorrerr_up_all), fmt='o', linewidth=1.5, ms=1, label="Uncorrelated Error")
+    plt.errorbar(FCCD_Am_all, FCCD_Ba_all, fmt='x', linewidth=0.75, ms=4, color="green")
+    plt.xlabel(r'$^{241}$Am FCCD / mm')
+    plt.ylabel(r'$^{133}$Ba FCCD / mm')
+    plt.xlim(0.5,1.5)
+    plt.ylim(0.5,1.5)
+    info = [f"Mean abs relative shift = {av_abs_shift_pct*100:.1f}$\%$"]
+    plt.legend(title="\n".join(info))
+    plt.tight_layout()
+    ax.axline((0, 0), slope=1, linestyle="dashed", color="grey")
+    plt.savefig(CodePath+"/../resultsAll/FCCDshift.png", bbox_inches='tight')
+    plt.show()
+    
 
 
 
